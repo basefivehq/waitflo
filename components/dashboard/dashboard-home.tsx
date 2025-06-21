@@ -2,11 +2,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Share2, TrendingUp, Plus, Clock, UserPlus, Settings, Globe, Mail, Star } from "lucide-react"
 
-interface DashboardHomeProps {
-  theme?: "dark" 
-}
+interface DashboardHomeProps {}
 
-export function DashboardHome({ theme = "dark" }: DashboardHomeProps) {
+export function DashboardHome({}: DashboardHomeProps) {
   const metrics = [
     {
       title: "Total Signups",
@@ -119,17 +117,15 @@ export function DashboardHome({ theme = "dark" }: DashboardHomeProps) {
         {metrics.map((metric, index) => (
           <Card
             key={index}
-            className={`transition-colors duration-300 ${
-              theme === "dark" ? "bg-[#1a1a2e] border-gray-800" : "bg-white border-gray-200 shadow-sm"
-            } border`}
+            className={`transition-colors duration-300 bg-[#1a1a2e] border-gray-800 border`}
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className={`text-sm font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                  <p className={`text-sm font-medium text-gray-400`}>
                     {metric.title}
                   </p>
-                  <p className={`text-2xl font-bold mt-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <p className={`text-2xl font-bold mt-1 text-white`}>
                     {metric.value}
                   </p>
                   <p className="text-green-400 text-sm mt-1 font-medium">
@@ -147,12 +143,10 @@ export function DashboardHome({ theme = "dark" }: DashboardHomeProps) {
 
       {/* Recent Activities Section */}
       <Card
-        className={`transition-colors duration-300 ${
-          theme === "dark" ? "bg-[#1a1a2e] border-gray-800" : "bg-white border-gray-200 shadow-sm"
-        } border`}
+        className={`transition-colors duration-300 bg-[#1a1a2e] border-gray-800 border`}
       >
         <CardHeader>
-          <CardTitle className={`flex items-center ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+          <CardTitle className={`flex items-center text-white`}>
             <Clock className="h-5 w-5 mr-2" />
             Recent Activities
           </CardTitle>
@@ -162,19 +156,17 @@ export function DashboardHome({ theme = "dark" }: DashboardHomeProps) {
             {recentActivities.map((activity) => (
               <div
                 key={activity.id}
-                className={`flex items-start space-x-4 p-3 rounded-lg transition-colors ${
-                  theme === "dark" ? "hover:bg-gray-800/50" : "hover:bg-gray-50"
-                }`}
+                className={`flex items-start space-x-4 p-3 rounded-lg transition-colors hover:bg-gray-800/50`}
               >
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activity.bgColor}`}>
                   <activity.icon className={`h-5 w-5 ${activity.color}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <p className={`text-sm font-medium text-white`}>
                     {activity.message}
                   </p>
                   <p
-                    className={`text-xs mt-1 flex items-center ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}
+                    className={`text-xs mt-1 flex items-center text-gray-400`}
                   >
                     <Clock className="h-3 w-3 mr-1" />
                     {activity.time}
@@ -185,11 +177,7 @@ export function DashboardHome({ theme = "dark" }: DashboardHomeProps) {
           </div>
           <div className="mt-6 text-center">
             <Button
-              className={`transition-colors ${
-                theme === "dark"
-                  ? "bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 text-gray-300 hover:text-white"
-                  : "bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 hover:text-gray-900"
-              }`}
+              className={`transition-colors bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 text-gray-300 hover:text-white`}
             >
               View All Activities
             </Button>
@@ -199,39 +187,25 @@ export function DashboardHome({ theme = "dark" }: DashboardHomeProps) {
 
       {/* Quick Actions Card */}
       <Card
-        className={`transition-colors duration-300 ${
-          theme === "dark" ? "bg-[#1a1a2e] border-gray-800" : "bg-white border-gray-200 shadow-sm"
-        } border`}
+        className={`transition-colors duration-300 bg-[#1a1a2e] border-gray-800 border`}
       >
         <CardHeader>
-          <CardTitle className={`${theme === "dark" ? "text-white" : "text-gray-900"}`}>Quick Actions</CardTitle>
+          <CardTitle className={`text-white`}>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button
-            className={`w-full font-semibold transition-colors ${
-              theme === "dark"
-                ? "bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20"
-                : "bg-purple-600 hover:bg-purple-700 text-white border border-purple-600"
-            }`}
+            className={`w-full font-semibold transition-colors bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20`}
           >
             <Plus className="h-4 w-4 mr-2" />
             Create New Waitlist Page
           </Button>
           <Button
-            className={`w-full transition-colors ${
-              theme === "dark"
-                ? "bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 text-gray-300 hover:text-white"
-                : "bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 hover:text-gray-900"
-            }`}
+            className={`w-full transition-colors bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 text-gray-300 hover:text-white`}
           >
             View All Signups
           </Button>
           <Button
-            className={`w-full transition-colors ${
-              theme === "dark"
-                ? "bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 text-gray-300 hover:text-white"
-                : "bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 hover:text-gray-900"
-            }`}
+            className={`w-full transition-colors bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 text-gray-300 hover:text-white`}
           >
             Export Data
           </Button>

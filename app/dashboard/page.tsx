@@ -14,37 +14,36 @@ import { ApiKeys } from "@/components/dashboard/api-keys"
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard")
-  const [theme, setTheme] = useState<"dark" | "light">("dark")
 
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <DashboardHome theme={theme} />
+        return <DashboardHome />
       case "waitlist-pages":
-        return <WaitlistPages theme={theme} />
+        return <WaitlistPages />
       case "page-builder":
-        return <PageBuilder theme={theme} />
+        return <PageBuilder />
       case "signups":
-        return <SignupsViewer theme={theme} />
+        return <SignupsViewer />
       case "referrals":
-        return <ReferralsPage theme={theme} />
+        return <ReferralsPage />
       case "emails":
-        return <EmailsAutomation theme={theme} />
+        return <EmailsAutomation />
       case "templates":
-        return <TemplatesGallery theme={theme} />
+        return <TemplatesGallery />
       case "analytics":
-        return <Analytics theme={theme} />
+        return <Analytics />
       case "settings":
-        return <Settings theme={theme} />
+        return <Settings />
       case "api-keys":
-        return <ApiKeys theme={theme} />
+        return <ApiKeys />
       default:
-        return <DashboardHome theme={theme} />
+        return <DashboardHome />
     }
   }
 
   return (
-    <DashboardLayout activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} setTheme={setTheme}>
+    <DashboardLayout activeTab={activeTab} setActiveTab={setActiveTab}>
       {renderContent()}
     </DashboardLayout>
   )

@@ -7,6 +7,19 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { 
+  MagicCard, 
+  FeatureCard, 
+  GradientHero, 
+  PricingCard, 
+  FAQItem, 
+  OnboardingStep, 
+  StatsCard, 
+  MagicButton 
+} from "@/components/ui/magic-ui"
 import {
   ArrowRight,
   ArrowLeft,
@@ -25,7 +38,17 @@ import {
   Trash2,
   Copy,
   Eye,
+  Building,
+  ShoppingCart,
+  GraduationCap,
+  Heart,
+  DollarSign,
+  Home,
+  Utensils,
+  Plane,
+  Gamepad2,
 } from "lucide-react"
+import { createSupabaseClient } from "@/lib/supabase/utils"
 
 type Step = "prompt" | "preview" | "edit" | "final-preview" | "publish"
 
@@ -46,6 +69,7 @@ interface GeneratedContent {
   steps: { title: string; description: string }[]
   faqs: { question: string; answer: string }[]
   pricing: { name: string; price: string; features: string[] }[]
+  onboardingSteps: { question: string; answer: string }[]
 }
 
 interface EditData {
@@ -72,6 +96,7 @@ export function PageBuilder() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [components, setComponents] = useState<ComponentData[]>([])
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null)
+  const [newPageId, setNewPageId] = useState<number | null>(null)
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -93,262 +118,136 @@ export function PageBuilder() {
     },
   })
 
-  const generateContent = (userPrompt: string): GeneratedContent => {
-    // AI simulation - in real app, this would call an AI service
-    const isEcommerce =
-      userPrompt.toLowerCase().includes("shop") ||
-      userPrompt.toLowerCase().includes("store") ||
-      userPrompt.toLowerCase().includes("buy")
-    const isSaaS =
-      userPrompt.toLowerCase().includes("software") ||
-      userPrompt.toLowerCase().includes("app") ||
-      userPrompt.toLowerCase().includes("platform")
-    const isFintech =
-      userPrompt.toLowerCase().includes("finance") ||
-      userPrompt.toLowerCase().includes("payment") ||
-      userPrompt.toLowerCase().includes("money")
-
-    let content: GeneratedContent
-
-    if (isEcommerce) {
-      content = {
-        companyName: "ShopFlow",
-        tagline: "The Future of Online Shopping",
-        description:
-          "Transform your shopping experience with our AI-powered platform that finds the best deals and products tailored just for you.",
-        features: ["Smart Product Discovery", "Price Comparison", "Personalized Recommendations", "Secure Checkout"],
-        benefits: ["Save up to 40% on purchases", "Find products 10x faster", "Never miss a deal again"],
-        steps: [
-          { title: "Browse Products", description: "Explore our curated collection of premium products" },
-          { title: "Compare Prices", description: "Our AI finds the best deals across multiple stores" },
-          { title: "Shop with Confidence", description: "Secure checkout with buyer protection guarantee" },
-        ],
-        faqs: [
-          {
-            question: "How does price comparison work?",
-            answer: "Our AI scans thousands of retailers in real-time to find you the best prices.",
-          },
-          {
-            question: "Is my payment information secure?",
-            answer: "Yes, we use bank-level encryption to protect all your data.",
-          },
-          { question: "Can I return items?", answer: "We offer a 30-day return policy on all purchases." },
-        ],
-        pricing: [
-          { name: "Basic", price: "Free", features: ["Basic search", "Price alerts", "5 saved items"] },
-          {
-            name: "Pro",
-            price: "$9.99/mo",
-            features: ["Advanced search", "Unlimited alerts", "Unlimited saves", "Priority support"],
-          },
-          {
-            name: "Premium",
-            price: "$19.99/mo",
-            features: ["Everything in Pro", "Personal shopper", "Exclusive deals", "Early access"],
-          },
-        ],
-      }
-    } else if (isSaaS) {
-      content = {
-        companyName: "CloudSync",
-        tagline: "Streamline Your Workflow",
-        description:
-          "The all-in-one productivity platform that helps teams collaborate, manage projects, and achieve more together.",
-        features: ["Real-time Collaboration", "Project Management", "Time Tracking", "Advanced Analytics"],
-        benefits: ["Increase productivity by 50%", "Reduce project delays", "Improve team communication"],
-        steps: [
-          { title: "Set Up Your Workspace", description: "Create your team workspace in under 2 minutes" },
-          { title: "Invite Your Team", description: "Add team members and assign roles and permissions" },
-          { title: "Start Collaborating", description: "Begin working together with powerful collaboration tools" },
-        ],
-        faqs: [
-          {
-            question: "How many team members can I add?",
-            answer: "Our plans support from 5 to unlimited team members depending on your subscription.",
-          },
-          {
-            question: "Is there a mobile app?",
-            answer: "Yes, we have native iOS and Android apps with full feature parity.",
-          },
-          {
-            question: "Can I integrate with other tools?",
-            answer: "We support 100+ integrations including Slack, Google Workspace, and more.",
-          },
-        ],
-        pricing: [
-          {
-            name: "Starter",
-            price: "$12/user/mo",
-            features: ["Up to 10 projects", "Basic reporting", "Email support"],
-          },
-          {
-            name: "Professional",
-            price: "$24/user/mo",
-            features: ["Unlimited projects", "Advanced analytics", "Priority support", "Custom integrations"],
-          },
-          {
-            name: "Enterprise",
-            price: "Custom",
-            features: ["Everything in Pro", "SSO", "Advanced security", "Dedicated manager"],
-          },
-        ],
-      }
-    } else if (isFintech) {
-      content = {
-        companyName: "PayFlow",
-        tagline: "Smart Financial Management",
-        description:
-          "Take control of your finances with AI-powered insights, automated savings, and intelligent spending recommendations.",
-        features: ["Expense Tracking", "Smart Budgeting", "Investment Insights", "Bill Management"],
-        benefits: ["Save 25% more each month", "Reduce financial stress", "Build wealth automatically"],
-        steps: [
-          { title: "Connect Your Accounts", description: "Securely link your bank accounts and credit cards" },
-          { title: "Set Your Goals", description: "Define your financial goals and let AI create a plan" },
-          { title: "Watch Your Money Grow", description: "Track progress and receive personalized recommendations" },
-        ],
-        faqs: [
-          {
-            question: "Is my financial data secure?",
-            answer: "We use 256-bit encryption and never store your banking credentials.",
-          },
-          {
-            question: "How does automated saving work?",
-            answer: "Our AI analyzes your spending patterns and automatically saves spare change and surplus funds.",
-          },
-          {
-            question: "Can I cancel anytime?",
-            answer: "Yes, you can cancel your subscription at any time with no penalties.",
-          },
-        ],
-        pricing: [
-          { name: "Basic", price: "Free", features: ["Expense tracking", "Basic budgeting", "Account linking"] },
-          {
-            name: "Plus",
-            price: "$4.99/mo",
-            features: ["Advanced analytics", "Goal setting", "Bill reminders", "Investment tracking"],
-          },
-          {
-            name: "Premium",
-            price: "$9.99/mo",
-            features: ["Everything in Plus", "Personal advisor", "Tax optimization", "Priority support"],
-          },
-        ],
-      }
-    } else {
-      // Generic/default content
-      content = {
-        companyName: "InnovateLab",
-        tagline: "Innovation Made Simple",
-        description:
-          "Join thousands of forward-thinking individuals who are shaping the future. Be part of something extraordinary.",
-        features: ["Cutting-edge Technology", "Expert Support", "Seamless Integration", "Advanced Security"],
-        benefits: ["10x faster results", "Reduce costs by 60%", "24/7 expert support"],
-        steps: [
-          { title: "Get Started", description: "Sign up and complete your profile in minutes" },
-          { title: "Customize", description: "Tailor the experience to your specific needs" },
-          { title: "Launch", description: "Go live and start seeing results immediately" },
-        ],
-        faqs: [
-          {
-            question: "How quickly can I get started?",
-            answer: "You can be up and running in less than 5 minutes with our quick setup process.",
-          },
-          {
-            question: "Do you offer customer support?",
-            answer: "Yes, we provide 24/7 customer support via chat, email, and phone.",
-          },
-          {
-            question: "Is there a free trial?",
-            answer: "We offer a 14-day free trial with full access to all features.",
-          },
-        ],
-        pricing: [
-          { name: "Starter", price: "$19/mo", features: ["Core features", "Email support", "Basic analytics"] },
-          {
-            name: "Professional",
-            price: "$49/mo",
-            features: ["Advanced features", "Priority support", "Advanced analytics", "Integrations"],
-          },
-          {
-            name: "Enterprise",
-            price: "$99/mo",
-            features: ["Everything included", "Custom solutions", "Dedicated support", "SLA guarantee"],
-          },
-        ],
-      }
-    }
-
-    return content
-  }
-
   const handleGenerate = async () => {
     if (!prompt.trim()) return
-
     setIsGenerating(true)
 
-    // Simulate AI processing time
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      const response = await fetch('/api/generatePage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      })
 
-    const content = generateContent(prompt)
-    setGeneratedContent(content)
+      if (!response.ok) {
+        throw new Error('Failed to generate content')
+      }
 
-    // Initialize edit data with generated content
-    setEditData({
-      logo: null,
-      pageName: content.companyName,
-      about: content.description,
-      onboardingSteps: [
-        { id: "1", question: "What's your primary goal?", answer: "Help users understand their main objective" },
-        { id: "2", question: "How did you hear about us?", answer: "Track our marketing effectiveness" },
-        { id: "3", question: "What's your company size?", answer: "Tailor the experience to their scale" },
-      ],
-      features: [...content.features],
-      howItWorksSteps: content.steps.map((step, index) => ({
-        id: (index + 1).toString(),
-        title: step.title,
-        description: step.description,
-      })),
-      benefits: [...content.benefits],
-      pricing: content.pricing.map((plan, index) => ({
-        id: (index + 1).toString(),
-        name: plan.name,
-        price: plan.price,
-        features: [...plan.features],
-      })),
-      faqs: content.faqs.map((faq, index) => ({
-        id: (index + 1).toString(),
-        question: faq.question,
-        answer: faq.answer,
-      })),
-      footer: {
-        email: `hello@${content.companyName.toLowerCase()}.com`,
-        phone: "+1 (555) 123-4567",
-        address: "123 Innovation St, Tech City, TC 12345",
-      },
-    })
+      const content = await response.json()
+      setGeneratedContent(content)
 
-    // Generate components based on content
-    const newComponents: ComponentData[] = [
-      { id: "header", type: "Header", title: "Header Section", content, visible: false },
-      { id: "hero", type: "Hero", title: "Hero Section", content, visible: false },
-      { id: "features", type: "Features", title: "Features Grid", content, visible: false },
-      { id: "how-it-works", type: "HowItWorks", title: "How It Works", content, visible: false },
-      { id: "benefits", type: "Benefits", title: "Benefits Section", content, visible: false },
-      { id: "pricing", type: "Pricing", title: "Pricing Table", content, visible: false },
-      { id: "faq", type: "FAQ", title: "FAQ Section", content, visible: false },
-      { id: "footer", type: "Footer", title: "Footer Section", content, visible: false },
-    ]
+      // Create components array with all sections including onboarding
+      const generatedComponents: ComponentData[] = [
+        {
+          id: "header",
+          type: "Header",
+          title: "Header",
+          content: content,
+          visible: true,
+        },
+        {
+          id: "hero",
+          type: "Hero",
+          title: "Hero Section",
+          content: content,
+          visible: true,
+        },
+        {
+          id: "features",
+          type: "Features",
+          title: "Features",
+          content: content,
+          visible: true,
+        },
+        {
+          id: "how-it-works",
+          type: "HowItWorks",
+          title: "How It Works",
+          content: content,
+          visible: true,
+        },
+        {
+          id: "benefits",
+          type: "Benefits",
+          title: "Benefits",
+          content: content,
+          visible: true,
+        },
+        {
+          id: "onboarding",
+          type: "Onboarding",
+          title: "Onboarding Flow",
+          content: content,
+          visible: true,
+        },
+        {
+          id: "pricing",
+          type: "Pricing",
+          title: "Pricing",
+          content: content,
+          visible: true,
+        },
+        {
+          id: "faq",
+          type: "FAQ",
+          title: "FAQ",
+          content: content,
+          visible: true,
+        },
+        {
+          id: "footer",
+          type: "Footer",
+          title: "Footer",
+          content: content,
+          visible: true,
+        },
+      ]
+      
+      setComponents(generatedComponents)
 
-    setComponents(newComponents)
-    setCurrentStep("preview")
-    setIsGenerating(false)
+      const supabase = createSupabaseClient()
+      const { data: { user } } = await supabase.auth.getUser()
 
-    // Animate components in with stagger
-    newComponents.forEach((_, index) => {
-      setTimeout(() => {
-        setComponents((prev) => prev.map((comp, i) => (i === index ? { ...comp, visible: true } : comp)))
-      }, index * 200)
-    })
+      if (user) {
+          // Create a slug from the company name
+          const slug = content.companyName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '')
+            + '-' + Date.now().toString().slice(-6)
+
+          const { data: newPage, error } = await supabase
+            .from('pages')
+            .insert({
+              user_id: user.id,
+              title: content.companyName,
+              slug: slug,
+              config: content,
+            })
+            .select()
+            .single()
+
+          if (error) throw error
+
+          if (newPage) {
+            setNewPageId(newPage.id)
+            setCurrentStep("preview")
+          }
+      }
+
+    } catch (error) {
+      console.error(error)
+      // Handle error state in UI
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) handleFileUpload(file)
   }
 
   const handleFileUpload = useCallback((file: File) => {
@@ -360,11 +259,6 @@ export function PageBuilder() {
     }
     reader.readAsDataURL(file)
   }, [])
-
-  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) handleFileUpload(file)
-  }
 
   const addOnboardingStep = () => {
     const newStep = {
@@ -658,14 +552,14 @@ export function PageBuilder() {
           <p className="text-xl text-gray-300">Get started in simple steps</p>
         </div>
         <div className="space-y-12">
-          {(editData.howItWorksSteps.length > 0 ? editData.howItWorksSteps : content.steps).map((step, index) => (
+          {(editData.howItWorksSteps.length > 0 ? editData.howItWorksSteps : content.steps).map((step: any, index) => (
             <div key={index} className="flex items-center space-x-8">
               <div className="flex-shrink-0 w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-2xl font-bold text-white">{index + 1}</span>
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-semibold text-white mb-2">{"title" in step ? step.title : step.title}</h3>
-                <p className="text-gray-300 text-lg">{"description" in step ? step.description : step.description}</p>
+                <h3 className="text-2xl font-semibold text-white mb-2">{step.title}</h3>
+                <p className="text-gray-300 text-lg">{step.description}</p>
               </div>
             </div>
           ))}
@@ -775,6 +669,180 @@ export function PageBuilder() {
     </div>
   )
 
+  const OnboardingComponent = ({ content }: { content: GeneratedContent }) => {
+    const [currentStep, setCurrentStep] = useState(0)
+    const [answers, setAnswers] = useState<string[]>([])
+    const [isComplete, setIsComplete] = useState(false)
+
+    const onboardingSteps = content.onboardingSteps || [
+      { question: "What's your primary goal?", answer: "Help us understand what you want to achieve" },
+      { question: "What's your timeline?", answer: "When do you need results?" },
+      { question: "What's your budget range?", answer: "This helps us recommend the right solution" }
+    ]
+
+    const handleAnswer = (answer: string) => {
+      const newAnswers = [...answers]
+      newAnswers[currentStep] = answer
+      setAnswers(newAnswers)
+
+      if (currentStep < onboardingSteps.length - 1) {
+        setCurrentStep(currentStep + 1)
+      } else {
+        setIsComplete(true)
+      }
+    }
+
+    const handleSubmit = () => {
+      // Here you would typically send the answers to your backend
+      console.log('Onboarding answers:', answers)
+      // You could show a success message or redirect
+    }
+
+    if (isComplete) {
+      return (
+        <div className="py-20 px-4 bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
+          <div className="max-w-2xl mx-auto text-center space-y-8">
+            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto">
+              <Check className="h-10 w-10 text-white" />
+            </div>
+            <h2 className="text-4xl font-bold text-white">Perfect! We've Got Your Info</h2>
+            <p className="text-xl text-gray-300">
+              Thanks for sharing your details. We'll use this information to personalize your experience and provide the best possible solution for your needs.
+            </p>
+            <div className="space-y-4">
+              <Button 
+                onClick={handleSubmit}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg"
+              >
+                Get Started Now
+              </Button>
+              <p className="text-gray-400 text-sm">
+                We'll be in touch within 24 hours with your personalized plan.
+              </p>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="py-20 px-4 bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-white mb-4">Let's Get Started</h2>
+            <p className="text-xl text-gray-300">Help us understand your needs better</p>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-gray-400">Step {currentStep + 1} of {onboardingSteps.length}</span>
+              <span className="text-sm text-gray-400">{Math.round(((currentStep + 1) / onboardingSteps.length) * 100)}%</span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-2">
+              <div 
+                className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${((currentStep + 1) / onboardingSteps.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Current Question */}
+          <div className="space-y-8">
+            <div className="text-center">
+              <h3 className="text-2xl font-semibold text-white mb-4">
+                {onboardingSteps[currentStep].question}
+              </h3>
+              <p className="text-gray-300 text-lg">
+                {onboardingSteps[currentStep].answer}
+              </p>
+            </div>
+
+            {/* Answer Options */}
+            <div className="space-y-4">
+              {getAnswerOptions(onboardingSteps[currentStep].question).map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleAnswer(option)}
+                  className="w-full p-6 text-left bg-gray-800/50 border border-gray-700 rounded-lg hover:bg-gray-800/70 transition-colors group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-white text-lg">{option}</span>
+                    <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Skip Option */}
+            <div className="text-center">
+              <button
+                onClick={() => handleAnswer("Skip")}
+                className="text-gray-400 hover:text-white text-sm underline"
+              >
+                Skip this question
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const getAnswerOptions = (question: string) => {
+    const questionLower = question.toLowerCase()
+    
+    if (questionLower.includes('use case') || questionLower.includes('goal')) {
+      return [
+        "Increase efficiency and productivity",
+        "Reduce costs and save money", 
+        "Improve customer experience",
+        "Scale and grow the business",
+        "Solve a specific problem"
+      ]
+    } else if (questionLower.includes('team size')) {
+      return [
+        "Just me (1 person)",
+        "Small team (2-10 people)",
+        "Medium team (11-50 people)",
+        "Large team (50+ people)",
+        "Enterprise (100+ people)"
+      ]
+    } else if (questionLower.includes('timeline')) {
+      return [
+        "ASAP - within a week",
+        "Soon - within a month",
+        "Flexible - within 3 months",
+        "Long-term - 6+ months",
+        "No specific timeline"
+      ]
+    } else if (questionLower.includes('budget')) {
+      return [
+        "Under $100",
+        "$100 - $500",
+        "$500 - $2,000",
+        "$2,000 - $10,000",
+        "$10,000+"
+      ]
+    } else if (questionLower.includes('primary goal')) {
+      return [
+        "Save time and automate tasks",
+        "Generate more leads and sales",
+        "Improve team collaboration",
+        "Enhance customer satisfaction",
+        "Reduce operational costs"
+      ]
+    } else {
+      return [
+        "Yes, absolutely",
+        "Yes, but I'm not sure",
+        "Maybe, I need more info",
+        "No, not right now",
+        "I'll decide later"
+      ]
+    }
+  }
+
   const FooterComponent = ({ content }: { content: GeneratedContent }) => (
     <div className="bg-gray-900 py-16 px-4 border-t border-gray-800">
       <div className="max-w-6xl mx-auto">
@@ -865,6 +933,7 @@ export function PageBuilder() {
       Pricing: PricingComponent,
       FAQ: FAQComponent,
       Footer: FooterComponent,
+      Onboarding: OnboardingComponent,
     }
 
     const Component = componentMap[component.type as keyof typeof componentMap]

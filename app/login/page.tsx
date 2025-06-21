@@ -1,11 +1,18 @@
+'use client'
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StarfieldBackground } from "@/components/starfield-background"
+import { login } from "@/lib/actions"
+import { useSearchParams } from "next/navigation"
 
 export default function LoginPage() {
+  const searchParams = useSearchParams()
+  const message = searchParams.get("message")
+
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Side - Brand Content */}
@@ -53,16 +60,18 @@ export default function LoginPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <form className="space-y-4">
+            <form action={login} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-gray-200">
                   Email Address
                 </Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="Enter your email"
                   className="h-12 rounded-xl border-white/20 focus:border-purple-400 focus:ring-purple-400 bg-white/10 backdrop-blur-sm text-white placeholder:text-gray-400"
+                  required
                 />
               </div>
 
@@ -72,9 +81,11 @@ export default function LoginPage() {
                 </Label>
                 <Input
                   id="password"
+                  name="password"
                   type="password"
                   placeholder="Enter your password"
                   className="h-12 rounded-xl border-white/20 focus:border-purple-400 focus:ring-purple-400 bg-white/10 backdrop-blur-sm text-white placeholder:text-gray-400"
+                  required
                 />
               </div>
 
@@ -97,6 +108,9 @@ export default function LoginPage() {
               <Button className="w-full h-12 bg-purple-600/80 hover:bg-purple-700/80 backdrop-blur-sm text-white font-semibold rounded-xl transition-all duration-200 border border-purple-500/30">
                 Sign In
               </Button>
+              {message && (
+                <p className="text-sm text-center text-red-400">{message}</p>
+              )}
             </form>
 
             <div className="text-center">

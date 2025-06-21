@@ -1,71 +1,136 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Search, Filter, Eye, Shield, Trash2, Download } from "lucide-react"
+import { Search, Filter, Eye, Shield, Trash2, Download, Loader2 } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
+
+interface User {
+  id: string
+  name: string
+  email: string
+  signupDate: string
+  role: string
+  pagesCount: number
+  signupsCollected: number
+  status: string
+  lastLogin: string
+}
+
+interface UserStats {
+  total: number
+  active: number
+  admins: number
+  totalPages: number
+}
 
 export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [users, setUsers] = useState<User[]>([])
+  const [stats, setStats] = useState<UserStats>({ total: 0, active: 0, admins: 0, totalPages: 0 })
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
-  const users = [
-    {
-      id: 1,
-      name: "Sarah Chen",
-      email: "sarah@example.com",
-      signupDate: "2024-01-15",
-      role: "user",
-      pagesCount: 3,
-      signupsCollected: 1247,
-      status: "active",
-      lastLogin: "2 hours ago",
-    },
-    {
-      id: 2,
-      name: "Mike Johnson",
-      email: "mike@example.com",
-      signupDate: "2024-01-12",
-      role: "user",
-      pagesCount: 2,
-      signupsCollected: 892,
-      status: "active",
-      lastLogin: "1 day ago",
-    },
-    {
-      id: 3,
-      name: "Emma Wilson",
-      email: "emma@example.com",
-      signupDate: "2024-01-08",
-      role: "admin",
-      pagesCount: 5,
-      signupsCollected: 2156,
-      status: "active",
-      lastLogin: "30 minutes ago",
-    },
-    {
-      id: 4,
-      name: "David Brown",
-      email: "david@example.com",
-      signupDate: "2024-01-14",
-      role: "user",
-      pagesCount: 1,
-      signupsCollected: 456,
-      status: "inactive",
-      lastLogin: "1 week ago",
-    },
-    {
-      id: 5,
-      name: "Lisa Garcia",
-      email: "lisa@example.com",
-      signupDate: "2024-01-11",
-      role: "user",
-      pagesCount: 4,
-      signupsCollected: 1834,
-      status: "active",
-      lastLogin: "3 hours ago",
-    },
-  ]
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/admin/users')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch users')
+      }
+
+      const data = await response.json()
+      setUsers(data.users)
+      setStats(data.stats)
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch users",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePromoteToAdmin = async (userId: string) => {
+    try {
+      setActionLoading(userId)
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, role: 'admin' })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to promote user')
+      }
+
+      toast({
+        title: "Success",
+        description: "User promoted to admin successfully"
+      })
+
+      // Refresh users list
+      await fetchUsers()
+    } catch (error) {
+      console.error('Error promoting user:', error)
+      toast({
+        title: "Error",
+        description: "Failed to promote user",
+        variant: "destructive"
+      })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user? This will also delete all their pages and data.")) {
+      return
+    }
+
+    try {
+      setActionLoading(userId)
+      const response = await fetch(`/api/admin/users?id=${userId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete user')
+      }
+
+      toast({
+        title: "Success",
+        description: "User deleted successfully"
+      })
+
+      // Refresh users list
+      await fetchUsers()
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      toast({
+        title: "Error",
+        description: "Failed to delete user",
+        variant: "destructive"
+      })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleViewUser = (userId: string) => {
+    console.log(`Viewing user ${userId}`)
+    // You could navigate to a user detail page here
+  }
 
   const filteredUsers = users.filter(
     (user) =>
@@ -73,18 +138,14 @@ export function UserManagement() {
       user.email.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const handlePromoteToAdmin = (userId: number) => {
-    console.log(`Promoting user ${userId} to admin`)
-  }
-
-  const handleDeleteUser = (userId: number) => {
-    if (confirm("Are you sure you want to delete this user?")) {
-      console.log(`Deleting user ${userId}`)
-    }
-  }
-
-  const handleViewUser = (userId: number) => {
-    console.log(`Viewing user ${userId}`)
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -102,7 +163,7 @@ export function UserManagement() {
         <Card className="bg-[#1a1a2e] border-purple-800/30">
           <CardContent className="p-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-white">{users.length}</p>
+              <p className="text-2xl font-bold text-white">{stats.total}</p>
               <p className="text-gray-400 text-sm">Total Users</p>
             </div>
           </CardContent>
@@ -110,7 +171,7 @@ export function UserManagement() {
         <Card className="bg-[#1a1a2e] border-purple-800/30">
           <CardContent className="p-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-green-400">{users.filter((u) => u.status === "active").length}</p>
+              <p className="text-2xl font-bold text-green-400">{stats.active}</p>
               <p className="text-gray-400 text-sm">Active Users</p>
             </div>
           </CardContent>
@@ -118,7 +179,7 @@ export function UserManagement() {
         <Card className="bg-[#1a1a2e] border-purple-800/30">
           <CardContent className="p-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-purple-400">{users.filter((u) => u.role === "admin").length}</p>
+              <p className="text-2xl font-bold text-purple-400">{stats.admins}</p>
               <p className="text-gray-400 text-sm">Admins</p>
             </div>
           </CardContent>
@@ -126,7 +187,7 @@ export function UserManagement() {
         <Card className="bg-[#1a1a2e] border-purple-800/30">
           <CardContent className="p-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-400">{users.reduce((sum, u) => sum + u.pagesCount, 0)}</p>
+              <p className="text-2xl font-bold text-blue-400">{stats.totalPages}</p>
               <p className="text-gray-400 text-sm">Total Pages</p>
             </div>
           </CardContent>
@@ -181,7 +242,7 @@ export function UserManagement() {
                       <p className="text-gray-300">{user.email}</p>
                     </td>
                     <td className="p-4">
-                      <p className="text-gray-300">{user.signupDate}</p>
+                      <p className="text-gray-300">{new Date(user.signupDate).toLocaleDateString()}</p>
                     </td>
                     <td className="p-4">
                       <span
@@ -217,17 +278,23 @@ export function UserManagement() {
                           size="sm"
                           onClick={() => handleViewUser(user.id)}
                           className="text-gray-400 hover:text-white hover:bg-purple-600/20"
+                          disabled={actionLoading === user.id}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {user.role !== "admin" && (
+                        {user.role !== 'admin' && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handlePromoteToAdmin(user.id)}
-                            className="text-gray-400 hover:text-purple-400 hover:bg-purple-600/20"
+                            className="text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10"
+                            disabled={actionLoading === user.id}
                           >
-                            <Shield className="h-4 w-4" />
+                            {actionLoading === user.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Shield className="h-4 w-4" />
+                            )}
                           </Button>
                         )}
                         <Button
@@ -235,8 +302,13 @@ export function UserManagement() {
                           size="sm"
                           onClick={() => handleDeleteUser(user.id)}
                           className="text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                          disabled={actionLoading === user.id}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {actionLoading === user.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </td>

@@ -1,29 +1,99 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, FileText, Mail, Activity, TrendingUp, UserPlus } from "lucide-react"
+import { Users, FileText, Mail, Activity, TrendingUp, UserPlus, Loader2 } from "lucide-react"
+
+interface AnalyticsData {
+  metrics: {
+    totalUsers: number
+    totalPages: number
+    publishedPages: number
+    totalSignups: number
+    totalOnboarding: number
+    recentUsers: number
+    recentPages: number
+    recentSignups: number
+  }
+  usageData: Array<{
+    day: string
+    signups: number
+    users: number
+  }>
+  performance: {
+    avgSignupsPerPage: string
+    avgOnboardingPerPage: string
+    signupToOnboardingRate: string
+    emailDeliveryRate: string
+    avgPageLoadTime: string
+    activeApiIntegrations: number
+  }
+  trends: {
+    userGrowth: string
+    pageGrowth: string
+    signupGrowth: string
+  }
+}
 
 export function AdminDashboardHome() {
-  const metrics = [
-    { title: "Total Users", value: "1,247", change: "+12%", icon: Users, color: "text-blue-400" },
-    { title: "Waitlist Pages", value: "342", change: "+8%", icon: FileText, color: "text-purple-400" },
-    { title: "Total Signups", value: "28,473", change: "+15%", icon: Mail, color: "text-green-400" },
-    { title: "Active Campaigns", value: "89", change: "+3%", icon: Activity, color: "text-yellow-400" },
-  ]
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Platform usage data
-  const usageData = [
-    { day: "Mon", signups: 245, users: 12 },
-    { day: "Tue", signups: 352, users: 18 },
-    { day: "Wed", signups: 189, users: 8 },
-    { day: "Thu", signups: 467, users: 25 },
-    { day: "Fri", signups: 589, users: 34 },
-    { day: "Sat", signups: 376, users: 21 },
-    { day: "Sun", signups: 243, users: 15 },
+  useEffect(() => {
+    fetchAnalytics()
+  }, [])
+
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/admin/analytics')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics')
+      }
+
+      const data = await response.json()
+      setAnalyticsData(data)
+    } catch (error) {
+      console.error('Error fetching analytics:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!analyticsData) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-400">Failed to load analytics data</p>
+        </div>
+      </div>
+    )
+  }
+
+  const { metrics, usageData, performance, trends } = analyticsData
+
+  const metricsCards = [
+    { title: "Total Users", value: metrics.totalUsers.toLocaleString(), change: trends.userGrowth, icon: Users, color: "text-blue-400" },
+    { title: "Waitlist Pages", value: metrics.totalPages.toLocaleString(), change: trends.pageGrowth, icon: FileText, color: "text-purple-400" },
+    { title: "Total Signups", value: metrics.totalSignups.toLocaleString(), change: trends.signupGrowth, icon: Mail, color: "text-green-400" },
+    { title: "Active Campaigns", value: metrics.publishedPages.toLocaleString(), change: "+3%", icon: Activity, color: "text-yellow-400" },
   ]
 
   const maxSignups = Math.max(...usageData.map((d) => d.signups))
   const maxUsers = Math.max(...usageData.map((d) => d.users))
 
-  // Recent activity
+  // Recent activity (mock data for now)
   const recentActivity = [
     { action: "New user registered", user: "sarah@example.com", time: "2 minutes ago", type: "user" },
     { action: "Waitlist page created", user: "mike@example.com", time: "5 minutes ago", type: "page" },
@@ -53,7 +123,7 @@ export function AdminDashboardHome() {
     <div className="space-y-6">
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((metric, index) => (
+        {metricsCards.map((metric, index) => (
           <Card key={index} className="bg-[#1a1a2e] border-purple-800/30">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -157,23 +227,23 @@ export function AdminDashboardHome() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-gray-300">Average signups per page</span>
-                <span className="text-white font-semibold">83.2</span>
+                <span className="text-white font-semibold">{performance.avgSignupsPerPage}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-300">Top referral conversion</span>
-                <span className="text-green-400 font-semibold">68%</span>
+                <span className="text-green-400 font-semibold">{performance.signupToOnboardingRate}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-300">Active API integrations</span>
-                <span className="text-white font-semibold">156</span>
+                <span className="text-white font-semibold">{performance.activeApiIntegrations}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-300">Email delivery rate</span>
-                <span className="text-green-400 font-semibold">99.2%</span>
+                <span className="text-green-400 font-semibold">{performance.emailDeliveryRate}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-300">Average page load time</span>
-                <span className="text-white font-semibold">1.2s</span>
+                <span className="text-white font-semibold">{performance.avgPageLoadTime}</span>
               </div>
             </div>
           </CardContent>

@@ -1,274 +1,392 @@
+'use client'
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Edit, Eye, Trash2, ExternalLink } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Copy, Settings, Globe, Calendar, Users, TrendingUp, Share2, ExternalLink } from "lucide-react"
+import { createSupabaseClient } from "@/lib/supabase/utils"
+import { useEffect, useState } from "react"
+import Link from "next/link"
 
-export function WaitlistPages() {
-  const pages = [
-    {
-      name: "SaaS Product Launch",
-      url: "saas-launch.waitly.co",
-      signups: 1247,
-      referrals: 523,
-      status: "Active",
-      views: 12847,
-      conversion: 9.7,
-    },
-    {
-      name: "Mobile App Beta",
-      url: "mobile-beta.waitly.co",
-      signups: 892,
-      referrals: 341,
-      status: "Active",
-      views: 8923,
-      conversion: 10.0,
-    },
-    {
-      name: "E-commerce Store",
-      url: "store-launch.waitly.co",
-      signups: 456,
-      referrals: 189,
-      status: "Draft",
-      views: 5634,
-      conversion: 8.1,
-    },
-    {
-      name: "Newsletter Signup",
-      url: "newsletter.waitly.co",
-      signups: 234,
-      referrals: 67,
-      status: "Paused",
-      views: 3421,
-      conversion: 6.8,
-    },
-  ]
+interface WaitlistPagesProps {}
 
-  // Performance comparison chart
-  const maxSignups = Math.max(...pages.map((p) => p.signups))
-  const maxViews = Math.max(...pages.map((p) => p.views))
+interface Page {
+  id: number
+  title: string
+  slug: string
+  published: boolean
+  created_at: string
+  updated_at: string
+  config: any
+}
+
+export function WaitlistPages({}: WaitlistPagesProps) {
+  const [pages, setPages] = useState<Page[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [selectedPage, setSelectedPage] = useState<Page | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editForm, setEditForm] = useState({
+    title: "",
+    slug: "",
+  })
+
+  useEffect(() => {
+    fetchPages()
+  }, [])
+
+  const fetchPages = async () => {
+    const supabase = createSupabaseClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (user) {
+      const { data: pagesData } = await supabase
+        .from('pages')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      setPages(pagesData || [])
+    }
+    setLoading(false)
+  }
+
+  const handlePublishToggle = async (pageId: number, currentStatus: boolean) => {
+    const supabase = createSupabaseClient()
+    
+    const { error } = await supabase
+      .from('pages')
+      .update({ published: !currentStatus })
+      .eq('id', pageId)
+
+    if (!error) {
+      setPages(pages.map(page => 
+        page.id === pageId ? { ...page, published: !currentStatus } : page
+      ))
+    }
+  }
+
+  const handleUpdatePage = async () => {
+    if (!selectedPage) return
+
+    const supabase = createSupabaseClient()
+    
+    const { error } = await supabase
+      .from('pages')
+      .update({
+        title: editForm.title,
+        slug: editForm.slug,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', selectedPage.id)
+
+    if (!error) {
+      setPages(pages.map(page => 
+        page.id === selectedPage.id 
+          ? { ...page, title: editForm.title, slug: editForm.slug }
+          : page
+      ))
+      setIsEditDialogOpen(false)
+      setSelectedPage(null)
+    }
+  }
+
+  const handleDeletePage = async (pageId: number) => {
+    if (!confirm('Are you sure you want to delete this page?')) return
+
+    const supabase = createSupabaseClient()
+    
+    const { error } = await supabase
+      .from('pages')
+      .delete()
+      .eq('id', pageId)
+
+    if (!error) {
+      setPages(pages.filter(page => page.id !== pageId))
+    }
+  }
+
+  const copyPageLink = (slug: string) => {
+    const link = `${window.location.origin}/p/${slug}`
+    navigator.clipboard.writeText(link)
+    // You could add a toast notification here
+  }
+
+  const filteredPages = pages.filter(page => {
+    const matchesSearch = page.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         page.slug.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesFilter = filterStatus === "all" || 
+                         (filterStatus === "published" && page.published) ||
+                         (filterStatus === "draft" && !page.published)
+    return matchesSearch && matchesFilter
+  })
+
+  const stats = {
+    total: pages.length,
+    published: pages.filter(p => p.published).length,
+    draft: pages.filter(p => !p.published).length,
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="bg-[#1a1a2e] border-gray-800">
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-700 rounded w-1/2 mb-2"></div>
+                  <div className="h-8 bg-gray-700 rounded w-1/3 mb-2"></div>
+                  <div className="h-3 bg-gray-700 rounded w-1/4"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <p className="text-gray-400">Manage your waitlist landing pages</p>
-        <Button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-semibold border border-white/20">
-          <Plus className="h-4 w-4 mr-2" />
-          Create New Page
-        </Button>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="bg-[#1a1a2e] border-gray-800">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-400">Total Pages</p>
+                <p className="text-2xl font-bold mt-1 text-white">{stats.total}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-400/20">
+                <Globe className="h-6 w-6 text-blue-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#1a1a2e] border-gray-800">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-400">Published</p>
+                <p className="text-2xl font-bold mt-1 text-white">{stats.published}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-green-400/20">
+                <Share2 className="h-6 w-6 text-green-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#1a1a2e] border-gray-800">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-400">Drafts</p>
+                <p className="text-2xl font-bold mt-1 text-white">{stats.draft}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-purple-400/20">
+                <Edit className="h-6 w-6 text-purple-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Performance Overview Chart */}
+      {/* Search and Filter */}
       <Card className="bg-[#1a1a2e] border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white">Page Performance Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 p-4">
-            <div className="flex items-end justify-between h-full space-x-4 relative">
-              {pages.map((page, index) => (
-                <div key={index} className="flex flex-col items-center flex-1">
-                  <div className="flex flex-col items-center justify-end h-48 space-y-1">
-                    {/* Views bar (background) */}
-                    <div
-                      className="w-full bg-gray-600/30 rounded-t-sm min-h-[4px] relative"
-                      style={{
-                        height: `${(page.views / maxViews) * 180}px`,
-                      }}
-                    ></div>
-                    {/* Signups bar (foreground) */}
-                    <div
-                      className="w-full bg-purple-600 rounded-t-sm min-h-[4px] relative group -mt-1"
-                      style={{
-                        height: `${(page.signups / maxViews) * 180}px`,
-                      }}
-                    >
-                      <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        <div>{page.signups} signups</div>
-                        <div>{page.views} views</div>
-                        <div>{page.conversion}% conversion</div>
-                      </div>
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search pages..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-700 text-white"
+                />
+              </div>
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full md:w-48 bg-gray-800 border-gray-700 text-white">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Pages</SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+                <SelectItem value="draft">Drafts</SelectItem>
+              </SelectContent>
+            </Select>
+            <Link href="/dashboard?tab=page-builder">
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Page
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Pages List */}
+      <div className="space-y-4">
+        {filteredPages.length === 0 ? (
+          <Card className="bg-[#1a1a2e] border-gray-800">
+            <CardContent className="p-12 text-center">
+              <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">No pages found</h3>
+              <p className="text-gray-400 mb-6">
+                {searchTerm || filterStatus !== "all" 
+                  ? "Try adjusting your search or filter criteria"
+                  : "Get started by creating your first waitlist page"
+                }
+              </p>
+              {!searchTerm && filterStatus === "all" && (
+                <Link href="/dashboard?tab=page-builder">
+                  <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Page
+                  </Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          filteredPages.map((page) => (
+            <Card key={page.id} className="bg-[#1a1a2e] border-gray-800 hover:bg-gray-800/50 transition-colors">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h3 className="text-lg font-semibold text-white">{page.title}</h3>
+                      <Badge variant={page.published ? "default" : "secondary"}>
+                        {page.published ? "Published" : "Draft"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center space-x-4 text-sm text-gray-400">
+                      <span className="flex items-center">
+                        <Globe className="h-4 w-4 mr-1" />
+                        /p/{page.slug}
+                      </span>
+                      <span className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        {new Date(page.created_at).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
-                  <span className="text-gray-400 text-xs mt-2 text-center max-w-20 truncate">{page.name}</span>
-                </div>
-              ))}
-              {/* Trendline overlay */}
-              <div className="absolute inset-0 pointer-events-none">
-                <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="performanceTrendGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.4" />
-                    </linearGradient>
-                  </defs>
-                  {/* Signups performance trendline */}
-                  <line
-                    x1="12.5"
-                    y1={100 - (pages[0].signups / maxViews) * 80}
-                    x2="87.5"
-                    y2={100 - (pages[pages.length - 1].signups / maxViews) * 80}
-                    stroke="#8b5cf6"
-                    strokeWidth="2.5"
-                    strokeDasharray="6,4"
-                    opacity="0.8"
-                  />
-                  {/* Add trend direction indicator */}
-                  <polygon
-                    points={`85,${100 - ((pages[pages.length - 1].signups / maxViews) * 80) - 3} 90,${100 - (pages[pages.length - 1].signups / maxViews) * 80} 85,${100 - ((pages[pages.length - 1].signups / maxViews) * 80) + 3}`}
-                    fill="#8b5cf6"
-                    opacity="0.8"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="flex items-center justify-center mt-4 space-x-6">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-purple-600 rounded"></div>
-                <span className="text-gray-400 text-sm">Signups</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-gray-600/30 rounded"></div>
-                <span className="text-gray-400 text-sm">Views</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Conversion Rate Comparison */}
-      <Card className="bg-[#1a1a2e] border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white">Conversion Rate Comparison</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {pages.map((page, index) => (
-              <div key={index} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300 text-sm">{page.name}</span>
                   <div className="flex items-center space-x-2">
-                    <span className="text-white font-semibold">{page.conversion}%</span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        page.status === "Active"
-                          ? "bg-green-900/50 text-green-400"
-                          : page.status === "Draft"
-                            ? "bg-yellow-900/50 text-yellow-400"
-                            : "bg-gray-900/50 text-gray-400"
-                      }`}
+                    {page.published && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyPageLink(page.slug)}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {page.published && (
+                      <Link href={`/p/${page.slug}`} target="_blank">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedPage(page)
+                        setEditForm({ title: page.title, slug: page.slug })
+                        setIsEditDialogOpen(true)
+                      }}
+                      className="text-gray-400 hover:text-white"
                     >
-                      {page.status}
-                    </span>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handlePublishToggle(page.id, page.published)}
+                      className={page.published ? "text-green-400 hover:text-green-300" : "text-gray-400 hover:text-white"}
+                    >
+                      {page.published ? "Unpublish" : "Publish"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeletePage(page.id)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                <div className="w-full bg-gray-800 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full ${
-                      page.conversion >= 9 ? "bg-green-600" : page.conversion >= 7 ? "bg-yellow-600" : "bg-red-600"
-                    }`}
-                    style={{ width: `${(page.conversion / 12) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
 
-      <Card className="bg-[#1a1a2e] border-gray-800">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left p-4 text-gray-400 font-medium">Page Name</th>
-                  <th className="text-left p-4 text-gray-400 font-medium">URL</th>
-                  <th className="text-left p-4 text-gray-400 font-medium">Views</th>
-                  <th className="text-left p-4 text-gray-400 font-medium">Signups</th>
-                  <th className="text-left p-4 text-gray-400 font-medium">Conversion</th>
-                  <th className="text-left p-4 text-gray-400 font-medium">Referrals</th>
-                  <th className="text-left p-4 text-gray-400 font-medium">Status</th>
-                  <th className="text-left p-4 text-gray-400 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pages.map((page, index) => (
-                  <tr key={index} className="border-b border-gray-800 hover:bg-gray-900/50">
-                    <td className="p-4">
-                      <p className="text-white font-medium">{page.name}</p>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <p className="text-gray-300">{page.url}</p>
-                        <ExternalLink className="h-4 w-4 text-gray-500" />
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <p className="text-white">{page.views.toLocaleString()}</p>
-                    </td>
-                    <td className="p-4">
-                      <p className="text-white">{page.signups.toLocaleString()}</p>
-                    </td>
-                    <td className="p-4">
-                      <p
-                        className={`font-semibold ${
-                          page.conversion >= 9
-                            ? "text-green-400"
-                            : page.conversion >= 7
-                              ? "text-yellow-400"
-                              : "text-red-400"
-                        }`}
-                      >
-                        {page.conversion}%
-                      </p>
-                    </td>
-                    <td className="p-4">
-                      <p className="text-white">{page.referrals.toLocaleString()}</p>
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          page.status === "Active"
-                            ? "bg-green-900/50 text-green-400"
-                            : page.status === "Draft"
-                              ? "bg-yellow-900/50 text-yellow-400"
-                              : "bg-gray-900/50 text-gray-400"
-                        }`}
-                      >
-                        {page.status}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-gray-400 hover:text-white hover:bg-white/10 backdrop-blur-sm"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-gray-400 hover:text-white hover:bg-white/10 backdrop-blur-sm"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-gray-400 hover:text-red-400 hover:bg-red-500/10 backdrop-blur-sm"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="text-white">Edit Page</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Update your page details
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title" className="text-gray-300">Page Title</Label>
+              <Input
+                id="title"
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                className="bg-gray-800 border-gray-700 text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="slug" className="text-gray-300">Page Slug</Label>
+              <Input
+                id="slug"
+                value={editForm.slug}
+                onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })}
+                className="bg-gray-800 border-gray-700 text-white"
+                placeholder="my-awesome-page"
+              />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              className="border-gray-700 text-gray-300 hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdatePage}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

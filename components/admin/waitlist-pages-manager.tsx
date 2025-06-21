@@ -1,81 +1,140 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Search, Filter, Eye, Ban, Trash2, ExternalLink } from "lucide-react"
+import { Search, Filter, Eye, Ban, Trash2, ExternalLink, Loader2 } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
+
+interface Page {
+  id: number
+  title: string
+  user: string
+  userEmail: string
+  url: string
+  signups: number
+  status: string
+  createdDate: string
+  lastActivity: string
+  views: number
+  conversion: number
+}
+
+interface PageStats {
+  total: number
+  active: number
+  totalSignups: number
+  totalViews: number
+}
 
 export function WaitlistPagesManager() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [pages, setPages] = useState<Page[]>([])
+  const [stats, setStats] = useState<PageStats>({ total: 0, active: 0, totalSignups: 0, totalViews: 0 })
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<number | null>(null)
 
-  const pages = [
-    {
-      id: 1,
-      title: "SaaS Product Launch",
-      user: "Sarah Chen",
-      userEmail: "sarah@example.com",
-      url: "saas-launch.waitly.co",
-      signups: 1247,
-      status: "active",
-      createdDate: "2024-01-15",
-      lastActivity: "2 hours ago",
-      views: 12847,
-      conversion: 9.7,
-    },
-    {
-      id: 2,
-      title: "Mobile App Beta",
-      user: "Mike Johnson",
-      userEmail: "mike@example.com",
-      url: "mobile-beta.waitly.co",
-      signups: 892,
-      status: "active",
-      createdDate: "2024-01-12",
-      lastActivity: "1 day ago",
-      views: 8923,
-      conversion: 10.0,
-    },
-    {
-      id: 3,
-      title: "E-commerce Store",
-      user: "Emma Wilson",
-      userEmail: "emma@example.com",
-      url: "store-launch.waitly.co",
-      signups: 456,
-      status: "inactive",
-      createdDate: "2024-01-08",
-      lastActivity: "1 week ago",
-      views: 5634,
-      conversion: 8.1,
-    },
-    {
-      id: 4,
-      title: "Newsletter Signup",
-      user: "David Brown",
-      userEmail: "david@example.com",
-      url: "newsletter.waitly.co",
-      signups: 234,
-      status: "active",
-      createdDate: "2024-01-14",
-      lastActivity: "3 hours ago",
-      views: 3421,
-      conversion: 6.8,
-    },
-    {
-      id: 5,
-      title: "Product Hunt Launch",
-      user: "Lisa Garcia",
-      userEmail: "lisa@example.com",
-      url: "ph-launch.waitly.co",
-      signups: 1834,
-      status: "active",
-      createdDate: "2024-01-11",
-      lastActivity: "30 minutes ago",
-      views: 18340,
-      conversion: 10.0,
-    },
-  ]
+  useEffect(() => {
+    fetchPages()
+  }, [])
+
+  const fetchPages = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/admin/pages')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch pages')
+      }
+
+      const data = await response.json()
+      setPages(data.pages)
+      setStats(data.stats)
+    } catch (error) {
+      console.error('Error fetching pages:', error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch pages",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleViewPage = (pageId: number) => {
+    const page = pages.find(p => p.id === pageId)
+    if (page) {
+      window.open(`/p/${page.url.replace('.waitly.co', '')}`, '_blank')
+    }
+  }
+
+  const handleDisablePage = async (pageId: number) => {
+    try {
+      setActionLoading(pageId)
+      const response = await fetch('/api/admin/pages', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pageId, published: false })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to disable page')
+      }
+
+      toast({
+        title: "Success",
+        description: "Page disabled successfully"
+      })
+
+      // Refresh pages list
+      await fetchPages()
+    } catch (error) {
+      console.error('Error disabling page:', error)
+      toast({
+        title: "Error",
+        description: "Failed to disable page",
+        variant: "destructive"
+      })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleDeletePage = async (pageId: number) => {
+    if (!confirm("Are you sure you want to delete this page? This action cannot be undone.")) {
+      return
+    }
+
+    try {
+      setActionLoading(pageId)
+      const response = await fetch(`/api/admin/pages?id=${pageId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete page')
+      }
+
+      toast({
+        title: "Success",
+        description: "Page deleted successfully"
+      })
+
+      // Refresh pages list
+      await fetchPages()
+    } catch (error) {
+      console.error('Error deleting page:', error)
+      toast({
+        title: "Error",
+        description: "Failed to delete page",
+        variant: "destructive"
+      })
+    } finally {
+      setActionLoading(null)
+    }
+  }
 
   const filteredPages = pages.filter(
     (page) =>
@@ -84,20 +143,14 @@ export function WaitlistPagesManager() {
       page.url.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const handleViewPage = (pageId: number) => {
-    console.log(`Viewing page ${pageId}`)
-  }
-
-  const handleDisablePage = (pageId: number) => {
-    if (confirm("Are you sure you want to disable this page?")) {
-      console.log(`Disabling page ${pageId}`)
-    }
-  }
-
-  const handleDeletePage = (pageId: number) => {
-    if (confirm("Are you sure you want to delete this page? This action cannot be undone.")) {
-      console.log(`Deleting page ${pageId}`)
-    }
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -116,7 +169,7 @@ export function WaitlistPagesManager() {
         <Card className="bg-[#1a1a2e] border-purple-800/30">
           <CardContent className="p-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-white">{pages.length}</p>
+              <p className="text-2xl font-bold text-white">{stats.total}</p>
               <p className="text-gray-400 text-sm">Total Pages</p>
             </div>
           </CardContent>
@@ -124,7 +177,7 @@ export function WaitlistPagesManager() {
         <Card className="bg-[#1a1a2e] border-purple-800/30">
           <CardContent className="p-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-green-400">{pages.filter((p) => p.status === "active").length}</p>
+              <p className="text-2xl font-bold text-green-400">{stats.active}</p>
               <p className="text-gray-400 text-sm">Active Pages</p>
             </div>
           </CardContent>
@@ -133,7 +186,7 @@ export function WaitlistPagesManager() {
           <CardContent className="p-6">
             <div className="text-center">
               <p className="text-2xl font-bold text-purple-400">
-                {pages.reduce((sum, p) => sum + p.signups, 0).toLocaleString()}
+                {stats.totalSignups.toLocaleString()}
               </p>
               <p className="text-gray-400 text-sm">Total Signups</p>
             </div>
@@ -143,9 +196,9 @@ export function WaitlistPagesManager() {
           <CardContent className="p-6">
             <div className="text-center">
               <p className="text-2xl font-bold text-blue-400">
-                {(pages.reduce((sum, p) => sum + p.conversion, 0) / pages.length).toFixed(1)}%
+                {stats.totalViews.toLocaleString()}
               </p>
-              <p className="text-gray-400 text-sm">Avg Conversion</p>
+              <p className="text-gray-400 text-sm">Total Views</p>
             </div>
           </CardContent>
         </Card>
@@ -189,18 +242,13 @@ export function WaitlistPagesManager() {
                   <tr key={page.id} className="border-b border-purple-800/20 hover:bg-purple-900/10">
                     <td className="p-4">
                       <p className="text-white font-medium">{page.title}</p>
+                      <p className="text-gray-400 text-sm">{page.userEmail}</p>
                     </td>
                     <td className="p-4">
-                      <div>
-                        <p className="text-white text-sm">{page.user}</p>
-                        <p className="text-gray-400 text-xs">{page.userEmail}</p>
-                      </div>
+                      <p className="text-gray-300">{page.user}</p>
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <p className="text-gray-300 text-sm">{page.url}</p>
-                        <ExternalLink className="h-3 w-3 text-gray-500" />
-                      </div>
+                      <p className="text-gray-300 text-sm font-mono truncate max-w-xs">{page.url}</p>
                     </td>
                     <td className="p-4">
                       <p className="text-white">{page.views.toLocaleString()}</p>
@@ -209,17 +257,7 @@ export function WaitlistPagesManager() {
                       <p className="text-white">{page.signups.toLocaleString()}</p>
                     </td>
                     <td className="p-4">
-                      <p
-                        className={`font-semibold ${
-                          page.conversion >= 9
-                            ? "text-green-400"
-                            : page.conversion >= 7
-                              ? "text-yellow-400"
-                              : "text-red-400"
-                        }`}
-                      >
-                        {page.conversion}%
-                      </p>
+                      <span className="text-green-400 font-semibold">{page.conversion}%</span>
                     </td>
                     <td className="p-4">
                       <span
@@ -231,7 +269,7 @@ export function WaitlistPagesManager() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <p className="text-gray-300 text-sm">{page.createdDate}</p>
+                      <p className="text-gray-300 text-sm">{new Date(page.createdDate).toLocaleDateString()}</p>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center space-x-2">
@@ -240,24 +278,35 @@ export function WaitlistPagesManager() {
                           size="sm"
                           onClick={() => handleViewPage(page.id)}
                           className="text-gray-400 hover:text-white hover:bg-purple-600/20"
+                          disabled={actionLoading === page.id}
                         >
-                          <Eye className="h-4 w-4" />
+                          <ExternalLink className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDisablePage(page.id)}
                           className="text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10"
+                          disabled={actionLoading === page.id}
                         >
-                          <Ban className="h-4 w-4" />
+                          {actionLoading === page.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Ban className="h-4 w-4" />
+                          )}
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeletePage(page.id)}
                           className="text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                          disabled={actionLoading === page.id}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {actionLoading === page.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </td>

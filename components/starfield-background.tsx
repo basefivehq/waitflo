@@ -12,7 +12,7 @@ interface Star {
 
 export function StarfieldBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number | null>(null)
   const starsRef = useRef<Star[]>([])
 
   useEffect(() => {

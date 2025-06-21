@@ -3,7 +3,7 @@ import { useState } from "react"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { DashboardHome } from "@/components/dashboard/dashboard-home"
 import { WaitlistPages } from "@/components/dashboard/waitlist-pages"
-import { PageBuilder } from "@/components/dashboard/page-builder"
+import { EnhancedPageBuilder } from "@/components/dashboard/enhanced-page-builder"
 import { SignupsViewer } from "@/components/dashboard/signups-viewer"
 import { ReferralsPage } from "@/components/dashboard/referrals-page"
 import { EmailsAutomation } from "@/components/dashboard/emails-automation"
@@ -22,7 +22,7 @@ export default function Dashboard() {
       case "waitlist-pages":
         return <WaitlistPages />
       case "page-builder":
-        return <PageBuilder />
+        return <EnhancedPageBuilder />
       case "signups":
         return <SignupsViewer />
       case "referrals":

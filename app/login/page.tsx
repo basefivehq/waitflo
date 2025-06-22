@@ -6,28 +6,81 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StarfieldBackground } from "@/components/starfield-background"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [needsConfirmation, setNeedsConfirmation] = useState(false)
+  const [email, setEmail] = useState("")
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Handle error from URL parameters
+    const errorParam = searchParams.get('error')
+    if (errorParam === 'confirmation_failed') {
+      setError('Email confirmation failed. Please try again or contact support.')
+    }
+  }, [searchParams])
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setIsLoading(true)
     setError("")
+    setNeedsConfirmation(false)
+    
     const formData = new FormData(event.currentTarget)
+    const emailValue = formData.get('email') as string
+    setEmail(emailValue)
+    
     const response = await fetch("/api/login", {
       method: "POST",
       body: formData,
     })
+    
+    const data = await response.json()
+    
     if (response.ok) {
-      window.location.href = "/dashboard"
+      // Redirect to return URL if available, otherwise to dashboard
+      const returnUrl = searchParams.get('returnUrl')
+      const redirectUrl = returnUrl ? decodeURIComponent(returnUrl) : '/dashboard'
+      window.location.href = redirectUrl
     } else {
-      const data = await response.json()
-      setError(data.message || "Login failed")
+      if (data.needsConfirmation) {
+        setNeedsConfirmation(true)
+        setError(data.message)
+      } else {
+        setError(data.message || "Login failed")
+      }
       setIsLoading(false)
     }
+  }
+
+  const handleResendConfirmation = async () => {
+    setIsLoading(true)
+    setError("")
+    
+    const response = await fetch("/api/signup", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+        password: 'dummy-password-for-resend', // This will be ignored by the signup API
+        resend: true
+      }),
+    })
+    
+    const data = await response.json()
+    
+    if (response.ok) {
+      setError("Confirmation email sent! Please check your inbox.")
+    } else {
+      setError(data.message || "Failed to resend confirmation email")
+    }
+    setIsLoading(false)
   }
 
   return (
@@ -77,58 +130,92 @@ export default function LoginPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-200">
-                  Email Address
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  className="h-12 rounded-xl border-white/20 focus:border-purple-400 focus:ring-purple-400 bg-white/10 backdrop-blur-sm text-white placeholder:text-gray-400"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-200">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  className="h-12 rounded-xl border-white/20 focus:border-purple-400 focus:ring-purple-400 bg-white/10 backdrop-blur-sm text-white placeholder:text-gray-400"
-                  required
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember"
-                    type="checkbox"
-                    className="h-4 w-4 text-purple-400 focus:ring-purple-400 border-white/30 rounded bg-white/10"
-                  />
-                  <label htmlFor="remember" className="ml-2 block text-sm text-gray-300">
-                    Remember me
-                  </label>
+            {needsConfirmation ? (
+              <div className="space-y-4">
+                <div className="bg-yellow-500/10 backdrop-blur-sm rounded-xl p-6 border border-yellow-500/30">
+                  <div className="flex items-center mb-3">
+                    <div className="w-8 h-8 bg-yellow-500/20 rounded-full flex items-center justify-center mr-3">
+                      <svg className="w-4 h-4 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                      </svg>
+                    </div>
+                    <span className="text-yellow-300 font-semibold">Email confirmation required</span>
+                  </div>
+                  <p className="text-yellow-200 text-sm mb-4">
+                    Please check your email and click the confirmation link before signing in.
+                  </p>
+                  <div className="space-y-3">
+                    <Button 
+                      onClick={handleResendConfirmation}
+                      disabled={isLoading}
+                      className="w-full h-12 bg-yellow-600/80 hover:bg-yellow-700/80 backdrop-blur-sm text-white font-semibold rounded-xl transition-all duration-200 border border-yellow-500/30"
+                    >
+                      {isLoading ? "Sending..." : "Resend Confirmation Email"}
+                    </Button>
+                    <Button 
+                      onClick={() => setNeedsConfirmation(false)}
+                      className="w-full h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-gray-300 font-semibold rounded-xl transition-all duration-200 border border-white/20"
+                    >
+                      Back to Login
+                    </Button>
+                  </div>
                 </div>
-                <Link href="/forgot-password" className="text-sm text-purple-300 hover:text-purple-200">
-                  Forgot password?
-                </Link>
               </div>
+            ) : (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-200">
+                    Email Address
+                  </Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    className="h-12 rounded-xl border-white/20 focus:border-purple-400 focus:ring-purple-400 bg-white/10 backdrop-blur-sm text-white placeholder:text-gray-400"
+                    required
+                  />
+                </div>
 
-              <Button className="w-full h-12 bg-purple-600/80 hover:bg-purple-700/80 backdrop-blur-sm text-white font-semibold rounded-xl transition-all duration-200 border border-purple-500/30" disabled={isLoading}>
-                {isLoading ? <span className="loader mr-2"></span> : null} Sign In
-              </Button>
-              {error && (
-                <p className="text-sm text-center text-red-400">{error}</p>
-              )}
-            </form>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-200">
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    className="h-12 rounded-xl border-white/20 focus:border-purple-400 focus:ring-purple-400 bg-white/10 backdrop-blur-sm text-white placeholder:text-gray-400"
+                    required
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      id="remember"
+                      type="checkbox"
+                      className="h-4 w-4 text-purple-400 focus:ring-purple-400 border-white/30 rounded bg-white/10"
+                    />
+                    <label htmlFor="remember" className="ml-2 block text-sm text-gray-300">
+                      Remember me
+                    </label>
+                  </div>
+                  <Link href="/forgot-password" className="text-sm text-purple-300 hover:text-purple-200">
+                    Forgot password?
+                  </Link>
+                </div>
+
+                <Button className="w-full h-12 bg-purple-600/80 hover:bg-purple-700/80 backdrop-blur-sm text-white font-semibold rounded-xl transition-all duration-200 border border-purple-500/30" disabled={isLoading}>
+                  {isLoading ? <span className="loader mr-2"></span> : null} Sign In
+                </Button>
+                {error && (
+                  <p className="text-sm text-center text-red-400">{error}</p>
+                )}
+              </form>
+            )}
 
             <div className="text-center">
               <p className="text-gray-300">

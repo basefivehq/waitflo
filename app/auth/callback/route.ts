@@ -8,9 +8,15 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = createSupabaseServerClient()
-    await supabase.auth.exchangeCodeForSession(code)
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    
+    if (error) {
+      console.log('Auth callback error:', error)
+      // Redirect to login with error
+      return NextResponse.redirect(`${requestUrl.origin}/login?error=confirmation_failed`)
+    }
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(requestUrl.origin)
+  // Redirect to dashboard after successful confirmation
+  return NextResponse.redirect(`${requestUrl.origin}/dashboard`)
 } 

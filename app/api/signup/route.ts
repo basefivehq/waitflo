@@ -2,17 +2,57 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData()
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
-  const origin = request.headers.get('origin') || ''
-  console.log('Signup attempt:', { email })
+  let email: string
+  let password: string
+  let isResend = false
 
-  if (!email || !password) {
-    return NextResponse.json({ success: false, message: 'Email and password are required.' }, { status: 400 })
+  // Check if it's a JSON request (for resend) or form data (for signup)
+  const contentType = request.headers.get('content-type')
+  
+  if (contentType?.includes('application/json')) {
+    const body = await request.json()
+    email = body.email
+    password = body.password
+    isResend = body.resend || false
+  } else {
+    const formData = await request.formData()
+    email = formData.get('email') as string
+    password = formData.get('password') as string
+  }
+
+  const origin = request.headers.get('origin') || ''
+  console.log('Signup/resend attempt:', { email, isResend })
+
+  if (!email) {
+    return NextResponse.json({ success: false, message: 'Email is required.' }, { status: 400 })
   }
 
   const supabase = createSupabaseServerClient()
+
+  if (isResend) {
+    // Handle resending confirmation email
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+      options: {
+        emailRedirectTo: `${origin}/auth/callback`,
+      },
+    })
+
+    if (error) {
+      console.log('Supabase resend error:', error)
+      return NextResponse.json({ success: false, message: error.message || 'Could not resend confirmation email' }, { status: 400 })
+    }
+
+    console.log('Resend success:', { email })
+    return NextResponse.json({ success: true, message: 'Confirmation email sent! Please check your inbox.' })
+  }
+
+  // Handle new signup
+  if (!password) {
+    return NextResponse.json({ success: false, message: 'Password is required.' }, { status: 400 })
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,

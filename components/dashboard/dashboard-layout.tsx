@@ -66,13 +66,25 @@ export function DashboardLayout({ children, activeTab, setActiveTab }: Dashboard
     }
   }
 
-  const handleLogout = () => {
-    // Clear any stored auth tokens/data
-    localStorage.removeItem("authToken")
-    sessionStorage.clear()
-
-    // Redirect to login page
-    window.location.href = "/login"
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+      })
+      
+      if (response.ok) {
+        // Redirect to login page
+        window.location.href = "/login"
+      } else {
+        console.error('Logout failed')
+        // Fallback: redirect anyway
+        window.location.href = "/login"
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Fallback: redirect anyway
+      window.location.href = "/login"
+    }
   }
 
   const { title, subtitle } = getWelcomeMessage()

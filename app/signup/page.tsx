@@ -21,10 +21,10 @@ export default function SignupPage() {
             method: "POST",
             body: formData,
         })
-        if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
             window.location.href = "/email-confirmation"
         } else {
-            const data = await response.json()
             setError(data.message || "Signup failed")
             setIsLoading(false)
         }

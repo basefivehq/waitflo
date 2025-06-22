@@ -1,8 +1,8 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Users, Share2, TrendingUp, Plus, Clock, UserPlus, Settings, Globe, Mail, Star, Sparkles, Wand2, Eye } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, Share2, TrendingUp, Plus, Clock, UserPlus, Settings, Globe, Mail, Star } from "lucide-react"
 import { createSupabaseClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -201,7 +201,7 @@ export function DashboardHome({}: DashboardHomeProps) {
           <CardTitle className={`text-white`}>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Link href="/dashboard?tab=page-builder">
+          <Link href="/dashboard?tab=waitlist-pages">
             <Button
               className={`w-full font-semibold transition-colors bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20`}
             >
@@ -221,54 +221,6 @@ export function DashboardHome({}: DashboardHomeProps) {
           >
             Export Data
           </Button>
-        </CardContent>
-      </Card>
-
-      {/* Enhanced Page Builder */}
-      <Card className="col-span-full lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-600" />
-            Enhanced Page Builder
-            <Badge variant="secondary" className="ml-auto">New</Badge>
-          </CardTitle>
-          <CardDescription>
-            Create stunning waitlist pages with AI-powered content generation, design variations, and section management
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full" />
-              <span>8 Design Variations</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full" />
-              <span>Image Management</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span>Section Control</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-orange-500 rounded-full" />
-              <span>Magic UI Components</span>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button asChild className="flex-1">
-              <Link href="/dashboard/enhanced-page-builder">
-                <Wand2 className="h-4 w-4 mr-2" />
-                Create Page
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/design-variations-demo">
-                <Eye className="h-4 w-4 mr-2" />
-                View Demo
-              </Link>
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>

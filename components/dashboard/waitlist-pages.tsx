@@ -226,7 +226,7 @@ export function WaitlistPages({}: WaitlistPagesProps) {
                 <SelectItem value="draft">Drafts</SelectItem>
               </SelectContent>
             </Select>
-            <Link href="/dashboard?tab=page-builder">
+            <Link href="/dashboard?tab=waitlist-pages">
               <Button className="bg-purple-600 hover:bg-purple-700 text-white">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Page
@@ -250,7 +250,7 @@ export function WaitlistPages({}: WaitlistPagesProps) {
                 }
               </p>
               {!searchTerm && filterStatus === "all" && (
-                <Link href="/dashboard?tab=page-builder">
+                <Link href="/dashboard?tab=waitlist-pages">
                   <Button className="bg-purple-600 hover:bg-purple-700 text-white">
                     <Plus className="h-4 w-4 mr-2" />
                     Create Your First Page

@@ -18,7 +18,6 @@ import {
   Sun,
   Menu,
   X,
-  Wand2,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -41,7 +40,6 @@ export function DashboardLayout({ children, activeTab, setActiveTab }: Dashboard
   const navigation = [
     { name: "Dashboard", id: "dashboard", icon: LayoutDashboard },
     { name: "Waitlist Pages", id: "waitlist-pages", icon: FileText },
-    { name: "Page Builder", id: "page-builder", icon: Wand2 },
     { name: "Signups", id: "signups", icon: Users },
     { name: "Referrals", id: "referrals", icon: Share2 },
     { name: "Emails", id: "emails", icon: Mail },

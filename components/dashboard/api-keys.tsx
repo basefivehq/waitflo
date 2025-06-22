@@ -299,7 +299,7 @@ export function ApiKeys() {
           {actionLoading === 'create' ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (
-            <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-2" />
           )}
           Create API Key
         </Button>
@@ -374,18 +374,18 @@ export function ApiKeys() {
           {apiKeys.length === 0 ? (
             <p className="text-gray-400 text-center py-8">No API keys found. Create one to get started.</p>
           ) : (
-            <div className="space-y-4">
+          <div className="space-y-4">
               {apiKeys.map((apiKey) => (
                 <div key={apiKey.id} className="border border-gray-800 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2">
                     <div>
-                      <h3 className="text-white font-semibold">{apiKey.name}</h3>
+                  <h3 className="text-white font-semibold">{apiKey.name}</h3>
                       <p className="text-gray-400 text-sm">{apiKey.pageTitle}</p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
                         onClick={() => toggleKeyVisibility(apiKey.id)}
                         className="text-gray-400 hover:text-white hover:bg-white/10 backdrop-blur-sm"
                       >
@@ -395,39 +395,39 @@ export function ApiKeys() {
                         variant="ghost"
                         size="sm"
                         onClick={() => copyToClipboard(apiKey.key)}
-                        className="text-gray-400 hover:text-white hover:bg-white/10 backdrop-blur-sm"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      className="text-gray-400 hover:text-white hover:bg-white/10 backdrop-blur-sm"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                         onClick={() => handleRegenerateApiKey(apiKey.id, apiKey.pageId)}
-                        className="text-gray-400 hover:text-white hover:bg-white/10 backdrop-blur-sm"
+                      className="text-gray-400 hover:text-white hover:bg-white/10 backdrop-blur-sm"
                         disabled={actionLoading === `regenerate-${apiKey.id}`}
-                      >
+                    >
                         {actionLoading === `regenerate-${apiKey.id}` ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <RefreshCw className="h-4 w-4" />
+                      <RefreshCw className="h-4 w-4" />
                         )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                         onClick={() => handleDeleteApiKey(apiKey.id, apiKey.pageId)}
-                        className="text-gray-400 hover:text-red-400 hover:bg-red-500/10 backdrop-blur-sm"
+                      className="text-gray-400 hover:text-red-400 hover:bg-red-500/10 backdrop-blur-sm"
                         disabled={actionLoading === apiKey.id}
-                      >
+                    >
                         {actionLoading === apiKey.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                         )}
-                      </Button>
-                    </div>
+                    </Button>
                   </div>
-                  <div className="flex items-center space-x-4 text-sm">
+                </div>
+                <div className="flex items-center space-x-4 text-sm">
                     <code className="bg-gray-900 px-2 py-1 rounded text-gray-300 font-mono">
                       {showKeys[apiKey.id] ? apiKey.key : `${apiKey.key.substring(0, 12)}...${apiKey.key.substring(apiKey.key.length - 4)}`}
                     </code>
@@ -435,60 +435,60 @@ export function ApiKeys() {
                     {apiKey.lastUsed && (
                       <span className="text-gray-500">Last used: {new Date(apiKey.lastUsed).toLocaleDateString()}</span>
                     )}
-                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
           )}
         </CardContent>
       </Card>
 
       {/* Webhooks */}
       {selectedPage && (
-        <Card className="bg-[#1a1a2e] border-gray-800">
-          <CardHeader>
-            <CardTitle className="text-white">Webhooks</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="webhookUrl" className="text-gray-300">
-                Webhook URL
-              </Label>
-              <Input
-                id="webhookUrl"
-                placeholder="https://your-app.com/webhooks/waitly"
+      <Card className="bg-[#1a1a2e] border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">Webhooks</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="webhookUrl" className="text-gray-300">
+              Webhook URL
+            </Label>
+            <Input
+              id="webhookUrl"
+              placeholder="https://your-app.com/webhooks/waitly"
                 value={webhookUrl}
                 onChange={(e) => setWebhookUrl(e.target.value)}
-                className="bg-gray-900 border-gray-700 text-white"
-              />
-            </div>
+              className="bg-gray-900 border-gray-700 text-white"
+            />
+          </div>
 
-            <div className="space-y-4">
-              <Label className="text-gray-300">Event Types</Label>
+          <div className="space-y-4">
+            <Label className="text-gray-300">Event Types</Label>
               {webhookSettings.find(w => w.pageId === selectedPage)?.webhookEvents.map((event, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border border-gray-800 rounded-lg">
-                  <div>
-                    <p className="text-white font-medium">{event.name}</p>
+              <div key={index} className="flex items-center justify-between p-3 border border-gray-800 rounded-lg">
+                <div>
+                  <p className="text-white font-medium">{event.name}</p>
                     <p className="text-gray-400 text-sm">
                       {event.name === "signup.created" && "Triggered when a new signup occurs"}
                       {event.name === "referral.completed" && "Triggered when a referral is successful"}
                       {event.name === "milestone.reached" && "Triggered when a user reaches a referral milestone"}
                     </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
                       checked={event.enabled}
                       onChange={(e) => {
                         // Update webhook events (simplified for now)
                         console.log('Toggle webhook event:', event.name, e.target.checked)
                       }}
-                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-600 rounded bg-gray-900"
-                    />
-                  </div>
+                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-600 rounded bg-gray-900"
+                  />
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
 
             <Button 
               onClick={handleUpdateWebhook}
@@ -498,10 +498,10 @@ export function ApiKeys() {
               {actionLoading === 'webhook' ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : null}
-              Save Webhook Settings
-            </Button>
-          </CardContent>
-        </Card>
+            Save Webhook Settings
+          </Button>
+        </CardContent>
+      </Card>
       )}
     </div>
   )

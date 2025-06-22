@@ -193,8 +193,8 @@ export function Analytics() {
                       <div>
                         <p className="text-white font-medium">{page.title}</p>
                         <p className="text-gray-400 text-sm">{page.url}</p>
-                      </div>
-                    </div>
+                </div>
+              </div>
                     <div className="text-right">
                       <p className="text-white font-semibold">{page.signups.toLocaleString()}</p>
                       <p className="text-green-400 text-sm">{page.conversion}% conversion</p>
@@ -267,9 +267,9 @@ export function Analytics() {
               <TrendingUp className="h-8 w-8 text-blue-400 mx-auto mb-2" />
               <p className="text-2xl font-bold text-white">{overview.recentOnboarding}</p>
               <p className="text-gray-400 text-sm">Onboarding This Week</p>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
       </div>
     </div>
   )

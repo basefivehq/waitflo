@@ -245,7 +245,7 @@ export function EmailsAutomation() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-gray-400">Configure automated email sequences</p>
+      <p className="text-gray-400">Configure automated email sequences</p>
         {emailSettings.length > 1 && (
           <select
             value={selectedPage || ""}
@@ -262,12 +262,12 @@ export function EmailsAutomation() {
       </div>
 
       {selectedSettings && (
-        <div className="space-y-6">
+      <div className="space-y-6">
           {Object.entries(selectedSettings.emailAutomation).map(([emailType, email]) => (
             <Card key={emailType} className="bg-[#1a1a2e] border-gray-800">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
                     <CardTitle className="text-white capitalize">
                       {emailType.replace(/([A-Z])/g, ' $1').trim()} Email
                     </CardTitle>
@@ -277,39 +277,39 @@ export function EmailsAutomation() {
                       {emailType === 'reminderEmail' && "Periodic updates to keep users engaged"}
                       {emailType === 'milestoneEmail' && "Sent when user reaches referral milestones"}
                     </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
+                </div>
+                <div className="flex items-center space-x-2">
                     <Switch 
                       checked={email.enabled}
                       onCheckedChange={(enabled) => handleEmailToggle(selectedSettings.pageId, emailType, enabled)}
                       disabled={saving === `${selectedSettings.pageId}-${emailType}`}
                     />
-                    <span className="text-gray-400 text-sm">{email.enabled ? "Enabled" : "Disabled"}</span>
-                  </div>
+                  <span className="text-gray-400 text-sm">{email.enabled ? "Enabled" : "Disabled"}</span>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
                   <Label htmlFor={`subject-${emailType}`} className="text-gray-300">
-                    Subject Line
-                  </Label>
-                  <Input
+                  Subject Line
+                </Label>
+                <Input
                     id={`subject-${emailType}`}
                     value={email.subject}
                     onChange={(e) => handleEmailUpdate(selectedSettings.pageId, emailType, 'subject', e.target.value)}
-                    className="bg-gray-900 border-gray-700 text-white"
+                  className="bg-gray-900 border-gray-700 text-white"
                     disabled={saving === `${selectedSettings.pageId}-${emailType}`}
-                  />
-                </div>
-                <div className="space-y-2">
+                />
+              </div>
+              <div className="space-y-2">
                   <Label htmlFor={`body-${emailType}`} className="text-gray-300">
-                    Email Body
-                  </Label>
-                  <Textarea
+                  Email Body
+                </Label>
+                <Textarea
                     id={`body-${emailType}`}
                     value={email.body}
                     onChange={(e) => handleEmailUpdate(selectedSettings.pageId, emailType, 'body', e.target.value)}
-                    rows={4}
+                  rows={4}
                     className="bg-gray-900 border-gray-700 text-white"
                     disabled={saving === `${selectedSettings.pageId}-${emailType}`}
                   />
@@ -356,7 +356,7 @@ export function EmailsAutomation() {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
       )}
     </div>
   )

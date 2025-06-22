@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createSupabaseServerClient()
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -24,6 +24,20 @@ export async function POST(request: NextRequest) {
   if (error) {
     console.log('Supabase signup error:', error)
     return NextResponse.json({ success: false, message: error.message || 'Could not register user' }, { status: 400 })
+  }
+
+  // Insert user into users table
+  const user = data.user
+  if (user) {
+    const { error: dbError } = await supabase.from('users').insert([
+      { id: user.id, email: user.email }
+    ])
+    if (dbError) {
+      console.log('Database user insert error:', dbError)
+      return NextResponse.json({ success: false, message: dbError.message || 'Could not save user to database' }, { status: 500 })
+    }
+  } else {
+    return NextResponse.json({ success: false, message: 'User not found after signup.' }, { status: 500 })
   }
 
   console.log('Signup success:', { email })

@@ -5,6 +5,7 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData()
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const returnUrl = formData.get('returnUrl') as string
 
   if (!email || !password) {
     return NextResponse.json({ success: false, message: 'Email and password are required.' }, { status: 400 })
@@ -38,6 +39,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message: error.message || 'Could not authenticate user' }, { status: 401 })
   }
 
-  // If login is successful, user is authenticated and session is set via cookies
-  return NextResponse.json({ success: true, message: 'Login successful! Redirecting to dashboard...' })
+  // If login is successful, verify the session was created
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+  
+  if (sessionError || !session) {
+    console.log('Session verification error:', sessionError)
+    return NextResponse.json({ success: false, message: 'Login successful but session not created properly' }, { status: 500 })
+  }
+
+  console.log('Login successful for user:', data.user?.email)
+  
+  // Determine redirect URL
+  const redirectUrl = returnUrl ? decodeURIComponent(returnUrl) : '/dashboard'
+  
+  // Create redirect response
+  const response = NextResponse.redirect(new URL(redirectUrl, request.url))
+  
+  // The cookies should be automatically set by Supabase SSR client
+  return response
 } 

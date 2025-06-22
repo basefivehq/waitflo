@@ -34,19 +34,28 @@ export default function LoginPage() {
     const emailValue = formData.get('email') as string
     setEmail(emailValue)
     
+    // Add returnUrl to form data if available
+    const returnUrl = searchParams.get('returnUrl')
+    if (returnUrl) {
+      formData.append('returnUrl', returnUrl)
+    }
+    
     const response = await fetch("/api/login", {
       method: "POST",
       body: formData,
     })
     
-    const data = await response.json()
-    
     if (response.ok) {
-      // Redirect to return URL if available, otherwise to dashboard
-      const returnUrl = searchParams.get('returnUrl')
-      const redirectUrl = returnUrl ? decodeURIComponent(returnUrl) : '/dashboard'
-      window.location.href = redirectUrl
+      // Handle server-side redirect
+      if (response.redirected) {
+        window.location.href = response.url
+      } else {
+        // Fallback to client-side redirect
+        const redirectUrl = returnUrl ? decodeURIComponent(returnUrl) : '/dashboard'
+        window.location.href = redirectUrl
+      }
     } else {
+      const data = await response.json()
       if (data.needsConfirmation) {
         setNeedsConfirmation(true)
         setError(data.message)

@@ -1,10 +1,10 @@
-import { createSupabaseClient } from '@/lib/supabase/utils'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/admin/pages - Get all pages with user and signup stats
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is admin
     const { data: { user } } = await supabase.auth.getUser()
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 // PUT /api/admin/pages/:id - Update page status
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is admin
     const { data: { user } } = await supabase.auth.getUser()
@@ -139,7 +139,7 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/pages/:id - Delete page
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is admin
     const { data: { user } } = await supabase.auth.getUser()

@@ -1,3 +1,5 @@
+// DEPRECATED: Use lib/supabase/client.ts for client components and lib/supabase/server.ts for server components, API routes, and middleware.
+
 import {
   createBrowserClient,
   createServerClient,

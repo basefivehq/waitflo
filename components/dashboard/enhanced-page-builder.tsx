@@ -60,7 +60,7 @@ import {
   Layers,
   Layout
 } from "lucide-react"
-import { createSupabaseClient } from "@/lib/supabase/utils"
+import { createSupabaseClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 
 type Step = "prompt" | "preview" | "edit" | "final-preview" | "publish"

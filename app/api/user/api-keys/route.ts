@@ -1,11 +1,11 @@
-import { createSupabaseClient } from '@/lib/supabase/utils'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 
 // GET /api/user/api-keys - Get user's API keys
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser()
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 // POST /api/user/api-keys - Create new API key
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser()
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/user/api-keys - Update API key or webhook settings
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser()
@@ -226,7 +226,7 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/user/api-keys - Delete API key
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser()

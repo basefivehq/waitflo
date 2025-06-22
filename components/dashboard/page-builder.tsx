@@ -48,7 +48,7 @@ import {
   Plane,
   Gamepad2,
 } from "lucide-react"
-import { createSupabaseClient } from "@/lib/supabase/utils"
+import { createSupabaseClient } from "@/lib/supabase/client"
 
 type Step = "prompt" | "preview" | "edit" | "final-preview" | "publish"
 

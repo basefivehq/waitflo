@@ -1,10 +1,10 @@
-import { createSupabaseClient } from '@/lib/supabase/utils'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/user/templates - Get available templates and user's saved templates
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser()
@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
 // POST /api/user/templates - Apply template to a page
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser()

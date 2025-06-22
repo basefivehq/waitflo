@@ -1,10 +1,10 @@
-import { createSupabaseClient } from '@/lib/supabase/utils'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/user/analytics - Get user's analytics data
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser()

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Users, Share2, TrendingUp, Plus, Clock, UserPlus, Settings, Globe, Mail, Star, Sparkles, Wand2, Eye } from "lucide-react"
-import { createSupabaseClient } from "@/lib/supabase/utils"
+import { createSupabaseClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"

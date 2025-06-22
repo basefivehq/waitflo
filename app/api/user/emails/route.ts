@@ -1,10 +1,10 @@
-import { createSupabaseClient } from '@/lib/supabase/utils'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/user/emails - Get user's email automation settings
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser()
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
 // PUT /api/user/emails - Update email automation settings
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser()
@@ -136,7 +136,7 @@ export async function PUT(request: NextRequest) {
 // POST /api/user/emails/test - Send test email
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser()

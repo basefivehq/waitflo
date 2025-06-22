@@ -1,10 +1,10 @@
+'use client'
+
 import { IndustryThemeProvider } from "@/components/ui/industry-themes"
-import { MagicCard, MagicButton, FeatureCard, GradientHero, PricingCard, FAQItem, StatsCard } from "@/components/ui/magic-ui"
-import { Badge } from "@/components/ui/badge"
-import { PawPrint, Users, Star, MapPin, Clock, Shield } from "lucide-react"
+import { MagicCard, MagicButton, FeatureCard, PricingCard, FAQItem, StatsCard } from "@/components/ui/magic-ui"
+import { PawPrint, Users, Star, Shield } from "lucide-react"
 
 export default function DogSittingDemoPage() {
-  // Simulated content for a dog sitting app with brown and white colors
   const dogSittingContent = {
     companyName: "PawSitter",
     tagline: "Trusted Dog Sitting Services in Your Neighborhood",
@@ -16,12 +16,6 @@ export default function DogSittingDemoPage() {
       "24/7 Customer Support",
       "Flexible Scheduling",
       "Insurance Coverage"
-    ],
-    benefits: [
-      "Peace of mind knowing your dog is in safe hands",
-      "Convenient booking with instant confirmation",
-      "Affordable rates starting at $25/night",
-      "Local sitters who know your neighborhood"
     ],
     pricing: [
       {
@@ -48,14 +42,6 @@ export default function DogSittingDemoPage() {
       {
         question: "What if my dog has special needs?",
         answer: "We have sitters trained in special needs care, including medication administration and mobility assistance."
-      },
-      {
-        question: "Is my dog covered by insurance?",
-        answer: "Yes, all bookings include comprehensive pet insurance coverage for your peace of mind."
-      },
-      {
-        question: "Can I meet the sitter before booking?",
-        answer: "Absolutely! We encourage meet-and-greets to ensure the perfect match between your dog and the sitter."
       }
     ],
     socialProof: {
@@ -70,18 +56,12 @@ export default function DogSittingDemoPage() {
         role: "Dog Parent",
         content: "PawSitter has been a lifesaver! My golden retriever Max loves his sitter and I get daily photo updates.",
         rating: 5
-      },
-      {
-        name: "Mike Chen",
-        role: "Frequent Traveler",
-        content: "As someone who travels often for work, PawSitter gives me complete peace of mind about my dog's care.",
-        rating: 5
       }
     ],
     customColors: {
-      primary: "#8B4513", // Brown
-      secondary: "#D2B48C", // Tan
-      accent: "#F5F5DC", // Beige
+      primary: "#8B4513",
+      secondary: "#D2B48C",
+      accent: "#F5F5DC",
       text: "#333333",
       background: "#ffffff"
     }
@@ -134,9 +114,6 @@ export default function DogSittingDemoPage() {
             <h2 className="text-3xl font-bold mb-4" style={{ color: dogSittingContent.customColors.primary }}>
               Why Choose PawSitter?
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Professional, reliable, and loving care for your furry family member
-            </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -185,9 +162,6 @@ export default function DogSittingDemoPage() {
             <h2 className="text-3xl font-bold mb-4" style={{ color: dogSittingContent.customColors.primary }}>
               Choose Your Plan
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Flexible pricing options to fit your needs and budget
-            </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -239,52 +213,6 @@ export default function DogSittingDemoPage() {
           </div>
         </div>
 
-        {/* Testimonials Section */}
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4" style={{ color: dogSittingContent.customColors.primary }}>
-              What Our Customers Say
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {dogSittingContent.testimonials.map((testimonial, index) => (
-              <MagicCard 
-                key={index} 
-                variant="glass" 
-                delay={index * 0.2}
-                style={{
-                  borderColor: dogSittingContent.customColors.secondary,
-                  backgroundColor: dogSittingContent.customColors.background
-                }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <div 
-                      className="w-12 h-12 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: dogSittingContent.customColors.primary }}
-                    >
-                      <Users className="h-6 w-6" style={{ color: dogSittingContent.customColors.background }} />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                    <p className="text-sm mb-3">{testimonial.content}</p>
-                    <div>
-                      <p className="font-semibold text-sm">{testimonial.name}</p>
-                      <p className="text-xs text-muted-foreground">{testimonial.role}</p>
-                    </div>
-                  </div>
-                </div>
-              </MagicCard>
-            ))}
-          </div>
-        </div>
-
         {/* Footer */}
         <footer 
           className="py-8 text-center"
@@ -292,9 +220,6 @@ export default function DogSittingDemoPage() {
         >
           <div className="max-w-6xl mx-auto px-6">
             <p>&copy; 2024 {dogSittingContent.companyName}. All rights reserved.</p>
-            <p className="text-sm mt-2" style={{ color: dogSittingContent.customColors.accent }}>
-              Trusted dog sitting services in your neighborhood
-            </p>
           </div>
         </footer>
       </div>

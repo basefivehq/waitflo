@@ -1,10 +1,10 @@
-import { createSupabaseClient } from '@/lib/supabase/utils'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/admin/settings - Get platform settings
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is admin
     const { data: { user } } = await supabase.auth.getUser()
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 // PUT /api/admin/settings - Update platform settings
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
     
     // Check if user is admin
     const { data: { user } } = await supabase.auth.getUser()

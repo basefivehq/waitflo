@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Search, Download, Filter, Calendar, Mail, Users, TrendingUp, Globe } from "lucide-react"
-import { createSupabaseClient } from "@/lib/supabase/utils"
+import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState } from "react"
 
 interface SignupsViewerProps {}

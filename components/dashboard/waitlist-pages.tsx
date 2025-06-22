@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Copy, Settings, Globe, Calendar, Users, TrendingUp, Share2, ExternalLink } from "lucide-react"
-import { createSupabaseClient } from "@/lib/supabase/utils"
+import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState } from "react"
 import Link from "next/link"
 

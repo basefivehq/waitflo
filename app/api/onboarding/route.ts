@@ -1,4 +1,4 @@
-import { createSupabaseClient } from '@/lib/supabase/utils'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createSupabaseClient(true)
+    const supabase = createSupabaseServerClient()
 
     // Check if the page exists and is published
     const { data: page, error: pageError } = await supabase

@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message: 'User not found after signup.' }, { status: 500 })
   }
 
+  // If email confirmation is required, inform the user
   console.log('Signup success:', { email })
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, message: 'Signup successful! Please check your email to confirm your account.' })
 } 

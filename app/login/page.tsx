@@ -6,12 +6,29 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StarfieldBackground } from "@/components/starfield-background"
-import { login } from "@/lib/actions"
-import { useSearchParams } from "next/navigation"
+import { useState } from "react"
 
 export default function LoginPage() {
-  const searchParams = useSearchParams()
-  const message = searchParams.get("message")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setIsLoading(true)
+    setError("")
+    const formData = new FormData(event.currentTarget)
+    const response = await fetch("/api/login", {
+      method: "POST",
+      body: formData,
+    })
+    if (response.ok) {
+      window.location.href = "/dashboard"
+    } else {
+      const data = await response.json()
+      setError(data.message || "Login failed")
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
@@ -60,7 +77,7 @@ export default function LoginPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <form action={login} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-gray-200">
                   Email Address
@@ -105,11 +122,11 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              <Button className="w-full h-12 bg-purple-600/80 hover:bg-purple-700/80 backdrop-blur-sm text-white font-semibold rounded-xl transition-all duration-200 border border-purple-500/30">
-                Sign In
+              <Button className="w-full h-12 bg-purple-600/80 hover:bg-purple-700/80 backdrop-blur-sm text-white font-semibold rounded-xl transition-all duration-200 border border-purple-500/30" disabled={isLoading}>
+                {isLoading ? <span className="loader mr-2"></span> : null} Sign In
               </Button>
-              {message && (
-                <p className="text-sm text-center text-red-400">{message}</p>
+              {error && (
+                <p className="text-sm text-center text-red-400">{error}</p>
               )}
             </form>
 

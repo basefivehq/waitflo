@@ -201,7 +201,7 @@ export function DashboardHome({}: DashboardHomeProps) {
           <CardTitle className={`text-white`}>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Link href="/dashboard?tab=waitlist-pages">
+          <Link href="/dashboard?tab=waitlist-builder">
             <Button
               className={`w-full font-semibold transition-colors bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20`}
             >

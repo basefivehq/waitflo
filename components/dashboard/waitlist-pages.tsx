@@ -226,10 +226,10 @@ export function WaitlistPages({}: WaitlistPagesProps) {
                 <SelectItem value="draft">Drafts</SelectItem>
               </SelectContent>
             </Select>
-            <Link href="/dashboard?tab=waitlist-pages">
+            <Link href="/dashboard?tab=waitlist-builder">
               <Button className="bg-purple-600 hover:bg-purple-700 text-white">
                 <Plus className="h-4 w-4 mr-2" />
-                Create Page
+                Create Your First Page
               </Button>
             </Link>
           </div>

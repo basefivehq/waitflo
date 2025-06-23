@@ -2,6 +2,7 @@
 import { useState } from "react"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { DashboardHome } from "@/components/dashboard/dashboard-home"
+import { WaitlistBuilder } from "@/components/dashboard/waitlist-builder"
 import { WaitlistPages } from "@/components/dashboard/waitlist-pages"
 import { SignupsViewer } from "@/components/dashboard/signups-viewer"
 import { ReferralsPage } from "@/components/dashboard/referrals-page"
@@ -18,6 +19,8 @@ export default function Dashboard() {
     switch (activeTab) {
       case "dashboard":
         return <DashboardHome />
+      case "waitlist-builder":
+        return <WaitlistBuilder />
       case "waitlist-pages":
         return <WaitlistPages />
       case "signups":

@@ -4,8 +4,10 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Wand2, Sparkles, ArrowRight, CheckCircle, Loader2 } from "lucide-react"
+import { Wand2, Sparkles, ArrowRight, CheckCircle, Loader2, Copy } from "lucide-react"
 import { createSupabaseClient } from "@/lib/supabase/client"
+import { useToast } from "@/components/ui/use-toast"
+import { Textarea } from "@/components/ui/textarea"
 
 interface WaitlistBuilderProps {}
 
@@ -13,6 +15,11 @@ export function WaitlistBuilder({}: WaitlistBuilderProps) {
   const [prompt, setPrompt] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedPage, setGeneratedPage] = useState<any>(null)
+  const [aiPrompt, setAiPrompt] = useState("")
+  const [aiCode, setAiCode] = useState("")
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState("")
+  const { toast } = useToast()
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return
@@ -94,6 +101,46 @@ export function WaitlistBuilder({}: WaitlistBuilderProps) {
       e.preventDefault()
       handleGenerate()
     }
+  }
+
+  const handleAIGenerate = async () => {
+    if (!aiPrompt.trim()) return
+    setAiLoading(true)
+    setAiError("")
+    setAiCode("")
+    try {
+      const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "deepseek-coder-v2-instruct",
+          messages: [
+            { role: "system", content: "You are an expert code generator for waitlist landing pages. Output only code, no explanations." },
+            { role: "user", content: aiPrompt }
+          ],
+          max_tokens: 512,
+          temperature: 0.2,
+        }),
+      })
+      if (!response.ok) throw new Error("Failed to generate code from AI")
+      const data = await response.json()
+      const code = data.choices?.[0]?.message?.content || ""
+      setAiCode(code)
+    } catch (err: any) {
+      setAiError("Error generating code. Please try again.")
+      toast({ title: "AI Error", description: err.message || String(err), variant: "destructive" })
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  const handleAICopy = () => {
+    if (!aiCode) return
+    navigator.clipboard.writeText(aiCode)
+    toast({ title: "Copied!", description: "AI-generated code copied to clipboard." })
   }
 
   return (
@@ -247,6 +294,49 @@ export function WaitlistBuilder({}: WaitlistBuilderProps) {
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* --- AI Code Generator Section --- */}
+      <Card className="bg-[#1a1a2e] border-purple-800 mt-8">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-purple-400" />
+            Free AI Code Generator for Waitlist Pages
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Textarea
+            placeholder="Describe the code you want for your waitlist page (e.g., 'A React component for a waitlist signup form with email validation')"
+            value={aiPrompt}
+            onChange={e => setAiPrompt(e.target.value)}
+            className="bg-transparent border-gray-700 text-white placeholder:text-white/60 min-h-[80px]"
+            disabled={aiLoading}
+          />
+          <Button
+            onClick={handleAIGenerate}
+            disabled={aiLoading || !aiPrompt.trim()}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl px-6 py-3"
+          >
+            {aiLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <>Generate Code</>}
+          </Button>
+          {aiError && <div className="text-red-400 text-sm">{aiError}</div>}
+          {aiCode && (
+            <div className="relative mt-4">
+              <pre className="bg-gray-900 text-green-200 rounded-lg p-4 overflow-x-auto text-sm whitespace-pre-wrap">
+                {aiCode}
+              </pre>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="absolute top-2 right-2 text-gray-400 hover:text-white"
+                onClick={handleAICopy}
+                aria-label="Copy code"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -13,6 +13,7 @@ import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Copy, Settings, 
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { WaitlistPagePreview } from "./WaitlistPagePreview"
 
 interface WaitlistPagesProps {}
 
@@ -37,6 +38,8 @@ export function WaitlistPages({}: WaitlistPagesProps) {
     title: "",
     slug: "",
   })
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false)
+  const [previewPage, setPreviewPage] = useState<Page | null>(null)
 
   useEffect(() => {
     fetchPages()
@@ -117,6 +120,26 @@ export function WaitlistPages({}: WaitlistPagesProps) {
     const link = `${window.location.origin}/p/${slug}`
     navigator.clipboard.writeText(link)
     // You could add a toast notification here
+  }
+
+  const handleUpdateSection = async (section: string, data: any) => {
+    if (!previewPage) return
+    const updatedConfig = { ...previewPage.config }
+    if (section === 'hero') {
+      updatedConfig.companyName = data.companyName
+      updatedConfig.tagline = data.tagline
+      updatedConfig.callToAction = data.callToAction
+    } else if (section === 'features') {
+      updatedConfig.features = data.features
+    } else if (section === 'onboarding') {
+      updatedConfig.onboardingSteps = data.steps
+    }
+    // Update in DB
+    const supabase = createSupabaseClient()
+    await supabase.from('pages').update({ config: updatedConfig, updated_at: new Date().toISOString() }).eq('id', previewPage.id)
+    // Update in state
+    setPages(pages => pages.map(p => p.id === previewPage.id ? { ...p, config: updatedConfig } : p))
+    setPreviewPage(p => p ? { ...p, config: updatedConfig } : p)
   }
 
   const filteredPages = pages.filter(page => {
@@ -332,6 +355,17 @@ export function WaitlistPages({}: WaitlistPagesProps) {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setPreviewPage(page)
+                        setIsPreviewDialogOpen(true)
+                      }}
+                      className="text-purple-400 hover:text-white"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -385,6 +419,21 @@ export function WaitlistPages({}: WaitlistPagesProps) {
               Save Changes
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview/Edit Dialog */}
+      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-800 max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-white">Preview & Edit Page</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Live preview and edit sections of your waitlist/onboarding page.
+            </DialogDescription>
+          </DialogHeader>
+          {previewPage && (
+            <WaitlistPagePreview config={previewPage.config} onUpdateSection={handleUpdateSection} />
+          )}
         </DialogContent>
       </Dialog>
     </div>

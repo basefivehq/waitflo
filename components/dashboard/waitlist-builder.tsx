@@ -23,46 +23,24 @@ export function WaitlistBuilder({}: WaitlistBuilderProps) {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return
-
     setIsGenerating(true)
     try {
-      // 1. Call OpenRouter AI
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      // 1. Call internal API route for AI generation
+      const response = await fetch("/api/generate-waitlist", {
         method: "POST",
-        headers: {
-          // Provide your OpenRouter API key in .env as NEXT_PUBLIC_OPENROUTER_API_KEY
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "mistralai/devstral-small",
-          messages: [
-            { role: "system", content: "You are an expert at generating structured waitlist landing page configurations as JSON. Output only the JSON config, no explanations." },
-            { role: "user", content: prompt }
-          ],
-          max_tokens: 1024,
-          temperature: 0.2
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
       })
-
       if (!response.ok) {
-        throw new Error('Failed to generate page')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to generate page')
       }
-
-      const data = await response.json()
-      const content = data.choices?.[0]?.message?.content || ""
-      let config
-      try {
-        config = JSON.parse(content)
-      } catch (e) {
-        throw new Error("AI did not return valid JSON. Please try a more specific prompt.")
-      }
-
+      const { config } = await response.json()
+      if (!config) throw new Error('AI did not return a valid config. Please try a more specific prompt.')
       // 2. Save to Supabase
       const supabase = createSupabaseClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("User not authenticated")
-
       const { data: savedPage, error: saveError } = await supabase
         .from('pages')
         .insert([{
@@ -70,16 +48,13 @@ export function WaitlistBuilder({}: WaitlistBuilderProps) {
           title: config.companyName || 'Generated Page',
           slug: generateSlug(config.companyName || 'generated-page'),
           config,
-          html: '', // You can generate HTML from config if needed
+          html: '',
           published: false
         }])
         .select()
         .single()
-
       if (saveError) throw new Error('Failed to save page to database')
-
       setGeneratedPage(savedPage)
-
     } catch (error: any) {
       console.error('Error generating page:', error)
       toast({

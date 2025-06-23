@@ -141,7 +141,7 @@ export function DashboardLayout({ children, activeTab, setActiveTab }: Dashboard
 
       {/* Desktop sidebar */}
       <div
-        className={`hidden lg:fixed lg:left-0 lg:top-0 lg:h-full lg:w-64 lg:border-r lg:block transition-colors duration-300 lg:bg-[#1a1a2e] lg:border-gray-800`}
+        className={`hidden lg:fixed lg:left-0 lg:top-0 lg:h-full lg:w-52 lg:border-r lg:block transition-colors duration-300 lg:bg-[#1a1a2e] lg:border-gray-800`}
       >
         <div className="flex items-center space-x-2 p-4 border-b border-gray-800">
           <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
@@ -149,18 +149,19 @@ export function DashboardLayout({ children, activeTab, setActiveTab }: Dashboard
           </div>
           <span className="text-xl font-bold">Waitly</span>
         </div>
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-1">
           {navigation.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center justify-center px-3 py-2 rounded-lg text-left transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors whitespace-nowrap overflow-hidden text-ellipsis ${
                 activeTab === item.id
                   ? "bg-purple-600 text-white"
                   : "text-gray-300 hover:text-white hover:bg-gray-800"
               }`}
             >
               <item.icon className="h-5 w-5" />
+              <span className="text-base font-medium">{item.name}</span>
             </button>
           ))}
         </nav>

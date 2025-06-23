@@ -154,14 +154,13 @@ export function DashboardLayout({ children, activeTab, setActiveTab }: Dashboard
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              className={`w-full flex items-center justify-center px-3 py-2 rounded-lg text-left transition-colors ${
                 activeTab === item.id
                   ? "bg-purple-600 text-white"
                   : "text-gray-300 hover:text-white hover:bg-gray-800"
               }`}
             >
               <item.icon className="h-5 w-5" />
-              <span>{item.name}</span>
             </button>
           ))}
         </nav>

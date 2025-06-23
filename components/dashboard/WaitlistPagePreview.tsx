@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
+import { ImageEditor } from "@/components/ui/image-editor"
+import { ColorCustomizer } from "@/components/ui/color-customizer"
 
 interface WaitlistPagePreviewProps {
   config: any
@@ -56,6 +58,33 @@ export function WaitlistPagePreview({ config, onUpdateSection }: WaitlistPagePre
     testimonials: config.testimonials || []
   })
 
+  // SEO & Social Edit State
+  const [seoOpen, setSeoOpen] = useState(false)
+  const [seoForm, setSeoForm] = useState({
+    seoTitle: config.seoTitle || '',
+    seoDescription: config.seoDescription || '',
+    seoKeywords: config.seoKeywords || '',
+    twitter: config.twitter || '',
+    facebook: config.facebook || '',
+    linkedin: config.linkedin || ''
+  })
+
+  // Branding Edit State
+  const [brandingOpen, setBrandingOpen] = useState(false)
+  const [brandingForm, setBrandingForm] = useState({
+    brandColor: config.brandColor || '#6610f2',
+    font: config.font || 'Inter'
+  })
+
+  // Images Edit State
+  const [imagesOpen, setImagesOpen] = useState(false)
+  const [imagesForm, setImagesForm] = useState({
+    hero: config.heroImage || '',
+    logo: config.logo || '',
+    featureImages: config.featureImages || [],
+    testimonialImages: config.testimonialImages || []
+  })
+
   // Handlers
   const handleHeroSave = () => {
     onUpdateSection('hero', heroForm)
@@ -84,6 +113,20 @@ export function WaitlistPagePreview({ config, onUpdateSection }: WaitlistPagePre
   const handleTestimonialsSave = () => {
     onUpdateSection('testimonials', testimonialsForm)
     setTestimonialsOpen(false)
+  }
+
+  // Handlers for new sections
+  const handleSeoSave = () => {
+    onUpdateSection('seo', seoForm)
+    setSeoOpen(false)
+  }
+  const handleBrandingSave = () => {
+    onUpdateSection('branding', brandingForm)
+    setBrandingOpen(false)
+  }
+  const handleImagesChange = (images: any) => {
+    setImagesForm(images)
+    onUpdateSection('images', images)
   }
 
   return (
@@ -430,6 +473,101 @@ export function WaitlistPagePreview({ config, onUpdateSection }: WaitlistPagePre
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Separator />
+
+      {/* SEO & Social Section */}
+      <Card className="bg-[#1a1a2e] border-gray-800 text-white">
+        <CardHeader>
+          <CardTitle>SEO & Social</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-2 text-sm text-gray-300">SEO and social sharing settings for your page.</div>
+          <div className="flex flex-col gap-2">
+            <div><span className="font-semibold">SEO Title:</span> {config.seoTitle || '—'}</div>
+            <div><span className="font-semibold">SEO Description:</span> {config.seoDescription || '—'}</div>
+            <div><span className="font-semibold">SEO Keywords:</span> {config.seoKeywords || '—'}</div>
+            <div><span className="font-semibold">Twitter:</span> {config.twitter || '—'}</div>
+            <div><span className="font-semibold">Facebook:</span> {config.facebook || '—'}</div>
+            <div><span className="font-semibold">LinkedIn:</span> {config.linkedin || '—'}</div>
+          </div>
+          <Button variant="outline" className="mt-4 border-gray-600 text-gray-300 hover:text-white" onClick={() => setSeoOpen(true)}>
+            Edit SEO & Social
+          </Button>
+        </CardContent>
+      </Card>
+      <Dialog open={seoOpen} onOpenChange={setSeoOpen}>
+        <DialogContent className="bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle>Edit SEO & Social</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">SEO Title</label>
+            <Input value={seoForm.seoTitle} onChange={e => setSeoForm(f => ({ ...f, seoTitle: e.target.value }))} placeholder="SEO Title" />
+            <label className="text-sm font-medium">SEO Description</label>
+            <Textarea value={seoForm.seoDescription} onChange={e => setSeoForm(f => ({ ...f, seoDescription: e.target.value }))} placeholder="SEO Description" />
+            <label className="text-sm font-medium">SEO Keywords</label>
+            <Input value={seoForm.seoKeywords} onChange={e => setSeoForm(f => ({ ...f, seoKeywords: e.target.value }))} placeholder="SEO Keywords (comma separated)" />
+            <label className="text-sm font-medium">Twitter URL</label>
+            <Input value={seoForm.twitter} onChange={e => setSeoForm(f => ({ ...f, twitter: e.target.value }))} placeholder="Twitter URL" />
+            <label className="text-sm font-medium">Facebook URL</label>
+            <Input value={seoForm.facebook} onChange={e => setSeoForm(f => ({ ...f, facebook: e.target.value }))} placeholder="Facebook URL" />
+            <label className="text-sm font-medium">LinkedIn URL</label>
+            <Input value={seoForm.linkedin} onChange={e => setSeoForm(f => ({ ...f, linkedin: e.target.value }))} placeholder="LinkedIn URL" />
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSeoSave} className="bg-purple-600 hover:bg-purple-700 text-white">Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Branding Section */}
+      <Card className="bg-[#1a1a2e] border-gray-800 text-white">
+        <CardHeader>
+          <CardTitle>Branding</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-2 text-sm text-gray-300">Customize your brand color and font.</div>
+          <div className="flex flex-col gap-2">
+            <div><span className="font-semibold">Brand Color:</span> <span style={{ background: config.brandColor, padding: '0 8px', borderRadius: 4 }}>{config.brandColor || '#6610f2'}</span></div>
+            <div><span className="font-semibold">Font:</span> {config.font || 'Inter'}</div>
+          </div>
+          <Button variant="outline" className="mt-4 border-gray-600 text-gray-300 hover:text-white" onClick={() => setBrandingOpen(true)}>
+            Edit Branding
+          </Button>
+        </CardContent>
+      </Card>
+      <Dialog open={brandingOpen} onOpenChange={setBrandingOpen}>
+        <DialogContent className="bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle>Edit Branding</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Input type="color" value={brandingForm.brandColor} onChange={e => setBrandingForm(f => ({ ...f, brandColor: e.target.value }))} />
+            <select value={brandingForm.font} onChange={e => setBrandingForm(f => ({ ...f, font: e.target.value }))} className="w-full p-2 rounded bg-gray-800 text-white">
+              <option value="Inter">Inter</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Lato">Lato</option>
+              <option value="Poppins">Poppins</option>
+            </select>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleBrandingSave} className="bg-purple-600 hover:bg-purple-700 text-white">Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Images Section */}
+      <Card className="bg-[#1a1a2e] border-gray-800 text-white">
+        <CardHeader>
+          <CardTitle>Images & Logo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-2 text-sm text-gray-300">Upload and manage your logo, hero image, and more.</div>
+          <ImageEditor images={imagesForm} onImagesChange={handleImagesChange} />
+        </CardContent>
+      </Card>
     </div>
   )
 } 

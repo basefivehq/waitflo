@@ -4,10 +4,11 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Wand2, Sparkles, ArrowRight, CheckCircle, Loader2, Copy } from "lucide-react"
+import { Wand2, Sparkles, ArrowRight, CheckCircle, Loader2 } from "lucide-react"
 import { createSupabaseClient } from "@/lib/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
-import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { WaitlistPagePreview } from "@/components/dashboard/WaitlistPagePreview"
 
 interface WaitlistBuilderProps {}
 
@@ -15,37 +16,33 @@ export function WaitlistBuilder({}: WaitlistBuilderProps) {
   const [prompt, setPrompt] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedPage, setGeneratedPage] = useState<any>(null)
-  const [aiPrompt, setAiPrompt] = useState("")
-  const [aiCode, setAiCode] = useState("")
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiError, setAiError] = useState("")
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingPage, setEditingPage] = useState<any>(null)
+  const [publishing, setPublishing] = useState(false)
   const { toast } = useToast()
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return
 
     setIsGenerating(true)
-    
     try {
-      const supabase = createSupabaseClient()
-      
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) {
-        throw new Error("User not authenticated")
-      }
-
-      // Call the generate page API
-      const response = await fetch('/api/generatePage', {
-        method: 'POST',
+      // 1. Call OpenRouter AI
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          // Provide your OpenRouter API key in .env as NEXT_PUBLIC_OPENROUTER_API_KEY
+          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          prompt: prompt,
-          userId: user.id
-        }),
+          model: "mistralai/devstral-small",
+          messages: [
+            { role: "system", content: "You are an expert at generating structured waitlist landing page configurations as JSON. Output only the JSON config, no explanations." },
+            { role: "user", content: prompt }
+          ],
+          max_tokens: 1024,
+          temperature: 0.2
+        })
       })
 
       if (!response.ok) {
@@ -53,36 +50,43 @@ export function WaitlistBuilder({}: WaitlistBuilderProps) {
       }
 
       const data = await response.json()
-      
-      if (data.success && data.data) {
-        // Save the generated page to the database
-        const { data: savedPage, error: saveError } = await supabase
-          .from('pages')
-          .insert([
-            {
-              user_id: user.id,
-              title: data.data.companyName || 'Generated Page',
-              slug: generateSlug(data.data.companyName || 'generated-page'),
-              config: data.data,
-              html: '', // Will be generated from config
-              published: false
-            }
-          ])
-          .select()
-          .single()
-
-        if (saveError) {
-          throw new Error('Failed to save page to database')
-        }
-
-        setGeneratedPage(savedPage)
-      } else {
-        throw new Error('Failed to generate page content')
+      const content = data.choices?.[0]?.message?.content || ""
+      let config
+      try {
+        config = JSON.parse(content)
+      } catch (e) {
+        throw new Error("AI did not return valid JSON. Please try a more specific prompt.")
       }
-      
-    } catch (error) {
+
+      // 2. Save to Supabase
+      const supabase = createSupabaseClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("User not authenticated")
+
+      const { data: savedPage, error: saveError } = await supabase
+        .from('pages')
+        .insert([{
+          user_id: user.id,
+          title: config.companyName || 'Generated Page',
+          slug: generateSlug(config.companyName || 'generated-page'),
+          config,
+          html: '', // You can generate HTML from config if needed
+          published: false
+        }])
+        .select()
+        .single()
+
+      if (saveError) throw new Error('Failed to save page to database')
+
+      setGeneratedPage(savedPage)
+
+    } catch (error: any) {
       console.error('Error generating page:', error)
-      // You could add toast notification here
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate page. Please try again.",
+        variant: "destructive"
+      })
     } finally {
       setIsGenerating(false)
     }
@@ -103,44 +107,49 @@ export function WaitlistBuilder({}: WaitlistBuilderProps) {
     }
   }
 
-  const handleAIGenerate = async () => {
-    if (!aiPrompt.trim()) return
-    setAiLoading(true)
-    setAiError("")
-    setAiCode("")
-    try {
-      const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "deepseek-coder-v2-instruct",
-          messages: [
-            { role: "system", content: "You are an expert code generator for waitlist landing pages. Output only code, no explanations." },
-            { role: "user", content: aiPrompt }
-          ],
-          max_tokens: 512,
-          temperature: 0.2,
-        }),
-      })
-      if (!response.ok) throw new Error("Failed to generate code from AI")
-      const data = await response.json()
-      const code = data.choices?.[0]?.message?.content || ""
-      setAiCode(code)
-    } catch (err: any) {
-      setAiError("Error generating code. Please try again.")
-      toast({ title: "AI Error", description: err.message || String(err), variant: "destructive" })
-    } finally {
-      setAiLoading(false)
+  // Section update handler
+  const handleUpdateSection = async (section: string, data: any) => {
+    if (!editingPage) return
+    const updatedConfig = { ...editingPage.config }
+    if (section === 'hero') {
+      updatedConfig.companyName = data.companyName
+      updatedConfig.tagline = data.tagline
+      updatedConfig.callToAction = data.callToAction
+    } else if (section === 'features') {
+      updatedConfig.features = data.features
+    } else if (section === 'onboarding') {
+      updatedConfig.onboardingSteps = data.steps
+    } else if (section === 'benefits') {
+      updatedConfig.benefits = data.benefits
+    } else if (section === 'pricing') {
+      updatedConfig.pricing = data.pricing
+    } else if (section === 'faq') {
+      updatedConfig.faqs = data.faqs
+    } else if (section === 'testimonials') {
+      updatedConfig.testimonials = data.testimonials
     }
+    // Update in DB
+    const supabase = createSupabaseClient()
+    await supabase.from('pages').update({ config: updatedConfig, updated_at: new Date().toISOString() }).eq('id', editingPage.id)
+    // Update in state
+    setEditingPage((p: any) => p ? { ...p, config: updatedConfig } : p)
+    setGeneratedPage((p: any) => p && p.id === editingPage.id ? { ...p, config: updatedConfig } : p)
   }
 
-  const handleAICopy = () => {
-    if (!aiCode) return
-    navigator.clipboard.writeText(aiCode)
-    toast({ title: "Copied!", description: "AI-generated code copied to clipboard." })
+  // Publish handler
+  const handlePublish = async () => {
+    if (!editingPage) return
+    setPublishing(true)
+    const supabase = createSupabaseClient()
+    const { error } = await supabase.from('pages').update({ published: true, updated_at: new Date().toISOString() }).eq('id', editingPage.id)
+    setPublishing(false)
+    if (!error) {
+      setEditingPage((p: any) => p ? { ...p, published: true } : p)
+      setGeneratedPage((p: any) => p && p.id === editingPage.id ? { ...p, published: true } : p)
+      toast({ title: "Page Published!", description: "Your page is now live.", variant: "default" })
+    } else {
+      toast({ title: "Error", description: "Failed to publish page.", variant: "destructive" })
+    }
   }
 
   return (
@@ -254,21 +263,35 @@ export function WaitlistBuilder({}: WaitlistBuilderProps) {
                 <strong>Slug:</strong> {generatedPage.slug || 'untitled'}
               </p>
               <p className="text-gray-300 text-sm">
-                <strong>Status:</strong> Draft
+                <strong>Status:</strong> {generatedPage.published ? 'Published' : 'Draft'}
               </p>
             </div>
             <div className="flex gap-3">
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => { setEditingPage(generatedPage); setEditDialogOpen(true); }}>
                 <ArrowRight className="h-4 w-4 mr-2" />
-                View Page
-              </Button>
-              <Button variant="outline" className="border-gray-600 text-gray-300 hover:text-white">
-                Edit Page
+                Preview & Edit
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Edit & Publish Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="bg-gray-900 border-gray-800 max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-white">Preview & Edit Page</DialogTitle>
+          </DialogHeader>
+          {editingPage && (
+            <WaitlistPagePreview config={editingPage.config} onUpdateSection={handleUpdateSection} />
+          )}
+          <DialogFooter className="mt-4">
+            <Button onClick={handlePublish} disabled={publishing || (editingPage && editingPage.published)} className="bg-green-600 hover:bg-green-700 text-white">
+              {publishing ? 'Publishing...' : (editingPage && editingPage.published ? 'Published' : 'Publish')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Tips */}
       <Card className="bg-[#1a1a2e] border-gray-800">
@@ -294,49 +317,6 @@ export function WaitlistBuilder({}: WaitlistBuilderProps) {
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* --- AI Code Generator Section --- */}
-      <Card className="bg-[#1a1a2e] border-purple-800 mt-8">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-400" />
-            Free AI Code Generator for Waitlist Pages
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Textarea
-            placeholder="Describe the code you want for your waitlist page (e.g., 'A React component for a waitlist signup form with email validation')"
-            value={aiPrompt}
-            onChange={e => setAiPrompt(e.target.value)}
-            className="bg-transparent border-gray-700 text-white placeholder:text-white/60 min-h-[80px]"
-            disabled={aiLoading}
-          />
-          <Button
-            onClick={handleAIGenerate}
-            disabled={aiLoading || !aiPrompt.trim()}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl px-6 py-3"
-          >
-            {aiLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <>Generate Code</>}
-          </Button>
-          {aiError && <div className="text-red-400 text-sm">{aiError}</div>}
-          {aiCode && (
-            <div className="relative mt-4">
-              <pre className="bg-gray-900 text-green-200 rounded-lg p-4 overflow-x-auto text-sm whitespace-pre-wrap">
-                {aiCode}
-              </pre>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="absolute top-2 right-2 text-gray-400 hover:text-white"
-                onClick={handleAICopy}
-                aria-label="Copy code"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
